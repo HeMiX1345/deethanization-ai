@@ -1,54 +1,92 @@
 import streamlit as st
-import joblib
+import pickle
 import pandas as pd
-import numpy as np
 
-st.set_page_config(page_title="Деэтанизация: Прогноз E-301", layout="centered")
-st.title("🏭 Цифровой двойник установки деэтанизации")
-st.markdown("Введите параметры сырья и режима работы. Модель мгновенно рассчитает прогноз температуры в **E-301**.")
+st.set_page_config(page_title="Цифровой двойник деэтанизации", layout="centered")
+st.title("🏭 Цифровой двойник процесса деэтанизации")
+st.markdown(
+    "Введите параметры сырья и режима работы колонного оборудования. "
+    "Модель мгновенно рассчитает рекомендуемые параметры в рефлюксной емкости Е-301 "
+    "для получения конденсата требуемого качества."
+)
 
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load('model.pkl')
-    features = joblib.load('features.pkl')
-    return model, features
+    with open('model_temp.pkl', 'rb') as f: model_temp = pickle.load(f)
+    with open('model_press.pkl', 'rb') as f: model_press = pickle.load(f)
+    with open('features.pkl', 'rb') as f: features = pickle.load(f)
+    with open('medians.pkl', 'rb') as f: medians = pickle.load(f)
+    return model_temp, model_press, features, medians
 
-model, features = load_artifacts()
+model_temp, model_press, features, medians = load_artifacts()
 
-# Загружаем датасет для медианных значений по умолчанию
-df = pd.read_csv('baza_final_clean.csv', sep=';', decimal=',')
-medians = df[features].median()
+# Маппинг старых названий признаков на новые UI-лейблы
+ui_labels = {
+    'метан': 'Содержание метана в сырье, в массовых долях',
+    'этан': 'Содержание этана в сырье, в массовых долях',
+    'K-301 Температура верха': 'Температура верха колонны К-301, °C',
+    'K-301 Масса рефлюксной жидкости': 'Масса рефлюксной жидкости колонны К-301, т/ч',
+    'Масса КГД из куба колонны': 'Масса КГД, выводимого из куба колонны, т/ч'
+}
 
-# Определяем топ-10 самых важных признаков для быстрого ввода
-importances = model.feature_importances_
-imp_df = pd.DataFrame({'feature': features, 'importance': importances})
-top_features = imp_df.sort_values('importance', ascending=False).head(10)['feature'].tolist()
-other_features = [f for f in features if f not in top_features]
+# Фракционный состав (столбцы вида 40-50, 50-60...)
+frac_cols = [c for c in features if '-' in c and c[0].isdigit()]
 
 st.subheader("📥 Ключевые параметры")
 inputs = {}
-cols = st.columns(2)
-for i, feat in enumerate(top_features):
-    default = float(medians[feat])
-    with cols[i % 2]:
-        inputs[feat] = st.number_input(feat, value=default, format="%.3f")
 
-with st.expander("🔧 Остальные параметры (заполнены медианными значениями)"):
-    cols2 = st.columns(3)
-    for i, feat in enumerate(other_features):
+col1, col2 = st.columns(2)
+with col1:
+    inputs['метан'] = st.number_input(ui_labels['метан'], value=float(medians['метан']), format="%.3f")
+    inputs['K-301 Температура верха'] = st.number_input(
+        ui_labels['K-301 Температура верха'],
+        value=float(medians['K-301 Температура верха']),
+        max_value=97.0,
+        format="%.2f",
+        help="Технологическое ограничение: не более 97°C"
+    )
+    inputs['Масса КГД из куба колонны'] = st.number_input(
+        ui_labels['Масса КГД из куба колонны'],
+        value=float(medians['Масса КГД из куба колонны']),
+        format="%.3f"
+    )
+with col2:
+    inputs['этан'] = st.number_input(ui_labels['этан'], value=float(medians['этан']), format="%.3f")
+    inputs['K-301 Масса рефлюксной жидкости'] = st.number_input(
+        ui_labels['K-301 Масса рефлюксной жидкости'],
+        value=float(medians['K-301 Масса рефлюксной жидкости']),
+        format="%.3f"
+    )
+
+with st.expander("📊 Данные о компонентно-фракционном составе сырья, в масс. долях"):
+    st.caption("💡 Значения по умолчанию заполнены медианами из исторических данных. Это означает, что если вы не меняете параметр, модель использует типичное (срединное) значение для вашей установки, чтобы расчёт был физически корректным.")
+    cols = st.columns(3)
+    for i, feat in enumerate(frac_cols):
         default = float(medians[feat])
-        with cols2[i % 3]:
+        with cols[i % 3]:
             inputs[feat] = st.number_input(feat, value=default, format="%.3f")
 
-if st.button("🔮 Рассчитать температуру", type="primary", use_container_width=True):
-    input_df = pd.DataFrame([inputs])[features]  # строгий порядок признаков
-    prediction = model.predict(input_df)[0]
-    
-    st.success(f"✅ Прогноз температуры в E-301: **{prediction:.2f} °C**")
-    
-    # Визуализация влияния параметров
-    st.subheader("📊 Что сильнее всего повлияло на прогноз?")
-    top_imp = imp_df.sort_values('importance', ascending=False).head(8)
-    st.bar_chart(top_imp.set_index('feature')['importance'])
-    
-    st.caption("💡 Модель обучена на 68 промышленных пробах. R² = 0.96 на чистых данных.")
+# Заполняем скрытые параметры медианами или фиксированными значениями
+hidden_features = [f for f in features if f not in inputs.keys()]
+for feat in hidden_features:
+    if feat in ['Метан+этан из жидкости в Е-301', 'Метан и этан в КГД']:
+        inputs[feat] = 0.07  # Фиксация ≤ 0.08 по требованию технолога
+    else:
+        inputs[feat] = float(medians[feat])
+
+if st.button("🔮 Рассчитать рекомендуемые параметры", type="primary", use_container_width=True):
+    # Строгий порядок признаков, как при обучении
+    input_df = pd.DataFrame([inputs])[features]
+
+    pred_temp = model_temp.predict(input_df)[0]
+    pred_press = model_press.predict(input_df)[0]
+
+    st.success("✅ Расчёт завершён!")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.metric("🌡️ Температура в рефлюксной емкости Е-301, °C", f"{pred_temp:.2f}")
+    with c2:
+        st.metric("📊 Давление в рефлюксной емкости Е-301, МПа", f"{pred_press:.3f}")
+
+    st.info("💡 Модель работает в режиме соблюдения ограничений: содержание метана+этана в жидкости Е-301 и в КГД поддерживается на уровне ≤ 0.08 масс. долей.")
+    st.caption("📌 Примечание: Параметры «Вывод балансового избытка», «Масса циркулирующей жидкости» и температуры зон К-301 зафиксированы на медианных значениях, так как в рамках данной модели они не являются варьируемыми управляющими воздействиями.")
