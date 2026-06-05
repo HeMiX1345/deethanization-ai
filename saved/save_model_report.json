@@ -1,0 +1,54 @@
+{
+  "temperature_model": {
+    "selected_model": "RandomForestRegressor",
+    "reason": "Лучшая средняя метрика на кросс-валидации для температуры",
+    "requested_target": "E-301 Температура",
+    "resolved_target": "E-301 Температура",
+    "rows_used": 436,
+    "features_used": 15,
+    "model_file": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved\\model_temp.pkl",
+    "features_file": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved\\features_temp.pkl",
+    "medians_file": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved\\medians_temp.pkl",
+    "features": [
+      "90-100",
+      "100-110",
+      "60-70",
+      "110-120",
+      "пропан",
+      "н-бутан",
+      "140-150",
+      "и-бутан",
+      "и-пентан",
+      "н-пентан",
+      "Метан+этан из жидкости в Е-301",
+      "K-301 Темп-ра в хол. зоне",
+      "40-50",
+      "50-60",
+      "K-301 Температура верха"
+    ]
+  },
+  "pressure_model": {
+    "selected_model": "RandomForestRegressor",
+    "reason": "Лучшая средняя метрика на кросс-валидации для давления",
+    "requested_target": "Давление в E-301",
+    "resolved_target": "Давление в E-301",
+    "rows_used": 436,
+    "features_used": 9,
+    "model_file": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved\\model_press.pkl",
+    "features_file": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved\\features_press.pkl",
+    "medians_file": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved\\medians_press.pkl",
+    "features": [
+      "Масса КГД из куба колонны",
+      "Вывод балансового избытка",
+      "520-540",
+      "K-301 Темп-ра в гор. зоне",
+      "Метан+этан из жидкости в Е-301",
+      "60-70",
+      "50-60",
+      "н-пентан",
+      "40-50"
+    ]
+  },
+  "saved_dir": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved",
+  "files_index": "C:\\Users\\graf-\\OneDrive\\Рабочий стол\\учеба\\акселератор\\saved\\saved_files_index.txt"
+}
