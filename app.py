@@ -88,86 +88,47 @@ def predict_values(artifacts, user_values):
     return temp_pred, press_pred
 
 
-def equipment_block(title, metrics, border_color='#d5dfd2'):
-    chips = ''
-    for label, value, unit, color in metrics:
-        chips += f"""
-        <div style='display:inline-block;background:#ffffff;border:1px solid #d8ddd8;border-radius:8px;padding:8px 10px;margin:4px;min-width:112px;'>
-            <div style='font-size:11px;color:#707870;'>{label}</div>
-            <div style='font-size:18px;font-weight:700;color:{color};'>{value} {unit}</div>
+def metric_box(label, value, unit='', color='green'):
+    st.markdown(
+        f"""
+        <div style='background:#ffffff;border:1px solid #d7ddd7;border-radius:10px;padding:8px 10px;margin-bottom:8px;'>
+            <div style='font-size:11px;color:#727972;'>{label}</div>
+            <div style='font-size:20px;font-weight:700;color:{color};'>{value} {unit}</div>
         </div>
-        """
-    return f"""
-    <div style='flex:1;min-width:240px;background:#f7faf7;border-radius:16px;padding:16px;border:1px solid {border_color};'>
-        <div style='font-size:14px;font-weight:700;color:#304130;margin-bottom:10px;'>{title}</div>
-        <div>{chips}</div>
-    </div>
-    """
+        """,
+        unsafe_allow_html=True
+    )
 
 
-def installation_view(temp_pred, press_pred, selected_values):
-    feed_temp = selected_values.get('K-301 Температура верха', selected_values.get('K-301 Темп-ра в хол. зоне', 0.0))
-    hot_zone = selected_values.get('K-301 Темп-ра в гор. зоне', 0.0)
-    methane = selected_values.get('Метан+этан из жидкости в Е-301', 0.0)
-    balance = selected_values.get('Вывод балансового избытка', 0.0)
-    kgd = selected_values.get('Масса КГД из куба колонны', 0.0)
-
-    left_block = equipment_block('Подача / контур K-301', [
-        ('Температура верха', f'{feed_temp:.2f}', '°C', '#2e7d32'),
-        ('Горячая зона', f'{hot_zone:.2f}', '°C', '#2e7d32'),
-        ('Балансовый избыток', f'{balance:.2f}', '', '#2e7d32'),
-    ])
-
-    center_block = f"""
-    <div style='width:280px;background:#f9fbf8;border-radius:22px;padding:16px 12px;border:1px solid #ccd7c9;text-align:center;'>
-        <div style='margin:0 auto 10px auto;width:92px;height:220px;border:4px solid #738873;border-radius:42px;background:linear-gradient(180deg,#fbfdfb 0%,#dfe9dd 100%);position:relative;'>
-            <div style='position:absolute;left:16px;right:16px;top:24px;height:6px;background:#8ea28f;border-radius:10px;'></div>
-            <div style='position:absolute;left:16px;right:16px;top:74px;height:6px;background:#8ea28f;border-radius:10px;'></div>
-            <div style='position:absolute;left:16px;right:16px;top:124px;height:6px;background:#8ea28f;border-radius:10px;'></div>
-            <div style='position:absolute;left:16px;right:16px;top:174px;height:6px;background:#8ea28f;border-radius:10px;'></div>
-            <div style='position:absolute;top:-18px;left:36px;width:20px;height:18px;background:#738873;border-radius:8px 8px 0 0;'></div>
-            <div style='position:absolute;bottom:-18px;left:36px;width:20px;height:18px;background:#738873;border-radius:0 0 8px 8px;'></div>
-        </div>
-        <div style='font-size:18px;font-weight:700;color:#253425;'>Колонна E-301</div>
-        <div style='display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px;'>
-            <div style='display:inline-block;background:#ffffff;border:1px solid #d8ddd8;border-radius:8px;padding:8px 10px;min-width:112px;'>
-                <div style='font-size:11px;color:#707870;'>Прогноз температуры</div>
-                <div style='font-size:18px;font-weight:700;color:#198754;'>{temp_pred:.2f} °C</div>
-            </div>
-            <div style='display:inline-block;background:#ffffff;border:1px solid #d8ddd8;border-radius:8px;padding:8px 10px;min-width:112px;'>
-                <div style='font-size:11px;color:#707870;'>Прогноз давления</div>
-                <div style='font-size:18px;font-weight:700;color:#0d6efd;'>{press_pred:.2f}</div>
+def draw_column_unit(temp_pred, press_pred):
+    st.markdown(
+        f"""
+        <div style='display:flex;justify-content:center;'>
+            <div style='width:120px;background:#f9fbf8;border:1px solid #ccd7c9;border-radius:20px;padding:12px;text-align:center;'>
+                <div style='margin:0 auto;width:74px;height:190px;border:4px solid #7e907d;border-radius:36px;background:linear-gradient(180deg,#fcfefc 0%,#e2ebe0 100%);position:relative;'>
+                    <div style='position:absolute;left:14px;right:14px;top:22px;height:5px;background:#91a391;border-radius:10px;'></div>
+                    <div style='position:absolute;left:14px;right:14px;top:58px;height:5px;background:#91a391;border-radius:10px;'></div>
+                    <div style='position:absolute;left:14px;right:14px;top:94px;height:5px;background:#91a391;border-radius:10px;'></div>
+                    <div style='position:absolute;left:14px;right:14px;top:130px;height:5px;background:#91a391;border-radius:10px;'></div>
+                    <div style='position:absolute;top:-16px;left:27px;width:18px;height:16px;background:#7e907d;border-radius:8px 8px 0 0;'></div>
+                    <div style='position:absolute;bottom:-16px;left:27px;width:18px;height:16px;background:#7e907d;border-radius:0 0 8px 8px;'></div>
+                </div>
+                <div style='font-size:16px;font-weight:700;color:#2f3f2f;margin-top:10px;'>E-301</div>
+                <div style='font-size:12px;color:#708070;margin-top:2px;'>колонна</div>
             </div>
         </div>
-    </div>
-    """
-
-    right_block = equipment_block('Выходные потоки', [
-        ('Метан+этан', f'{methane:.2f}', '', '#2e7d32'),
-        ('Масса КГД', f'{kgd:.2f}', '', '#2e7d32'),
-        ('Состояние', 'расчет', '', '#2e7d32'),
-    ])
-
-    html = f"""
-    <div style='background:#eef2ed;border:1px solid #c9d2c7;border-radius:18px;padding:18px 18px 14px 18px;'>
-        <div style='font-size:18px;font-weight:700;color:#243224;margin-bottom:12px;'>Схема узла деэтанизации</div>
-        <div style='display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;'>
-            {left_block}
-            <div style='width:60px;text-align:center;font-size:34px;color:#5f7661;'>⟶</div>
-            {center_block}
-            <div style='width:60px;text-align:center;font-size:34px;color:#5f7661;'>⟶</div>
-            {right_block}
-        </div>
-    </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True
+    )
+    metric_box('Прогноз температуры', f'{temp_pred:.2f}', '°C', '#198754')
+    metric_box('Прогноз давления', f'{press_pred:.2f}', '', '#0d6efd')
 
 
 def main():
     st.markdown(
         """
         <style>
-        .block-container {padding-top: 1rem; padding-bottom: 1rem; max-width: 1500px;}
+        .block-container {padding-top: 1rem; padding-bottom: 1rem; max-width: 1450px;}
         .stNumberInput label {font-weight: 500;}
         </style>
         """,
@@ -175,7 +136,7 @@ def main():
     )
 
     st.title('Цифровой двойник деэтанизации')
-    st.caption('Упрощенная технологическая схема с ключевыми параметрами установки и прогнозом для E-301.')
+    st.caption('Сделано в формате простой мнемосхемы: только ключевые элементы и понятные прогнозные значения.')
 
     try:
         artifacts = load_artifacts()
@@ -186,6 +147,7 @@ def main():
     ref_df = find_reference_dataset()
     temp_features = artifacts['temp_features']
     press_features = artifacts['press_features']
+
     medians = {}
     for feat, val in artifacts['temp_medians'].items():
         medians[feat] = val
@@ -207,7 +169,7 @@ def main():
 
     with st.sidebar:
         st.subheader('Управление')
-        st.write('Изменяйте ключевые параметры процесса. Визуализация обновляется автоматически.')
+        st.write('Изменяйте ключевые параметры процесса. Прогноз обновляется автоматически.')
         show_more = st.checkbox('Показать расширенный ввод', value=False)
         use_demo = st.button('Заполнить demo-значениями')
 
@@ -234,7 +196,28 @@ def main():
     temp_pred, press_pred = predict_values(artifacts, user_values)
 
     st.markdown('### Визуализация установки')
-    installation_view(temp_pred, press_pred, user_values)
+    st.markdown("""
+    <div style='background:#eef2ed;border:1px solid #c9d2c7;border-radius:18px;padding:16px;'>
+        <div style='font-size:18px;font-weight:700;color:#243224;margin-bottom:8px;'>Схема узла деэтанизации</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    left, center, right = st.columns([1.2, 0.9, 1.2])
+
+    with left:
+        st.markdown('#### Подача / K-301')
+        metric_box('Температура верха', f"{user_values.get('K-301 Температура верха', medians.get('K-301 Температура верха', 0.0)):.2f}", '°C', '#2e7d32')
+        metric_box('Горячая зона', f"{user_values.get('K-301 Темп-ра в гор. зоне', medians.get('K-301 Темп-ра в гор. зоне', 0.0)):.2f}", '°C', '#2e7d32')
+        metric_box('Балансовый избыток', f"{user_values.get('Вывод балансового избытка', medians.get('Вывод балансового избытка', 0.0)):.2f}", '', '#2e7d32')
+
+    with center:
+        draw_column_unit(temp_pred, press_pred)
+
+    with right:
+        st.markdown('#### Выходные потоки')
+        metric_box('Метан+этан', f"{user_values.get('Метан+этан из жидкости в Е-301', medians.get('Метан+этан из жидкости в Е-301', 0.0)):.2f}", '', '#2e7d32')
+        metric_box('Масса КГД', f"{user_values.get('Масса КГД из куба колонны', medians.get('Масса КГД из куба колонны', 0.0)):.2f}", '', '#2e7d32')
+        metric_box('Состояние', 'расчет', '', '#2e7d32')
 
     st.markdown('### Сводка')
     m1, m2, m3 = st.columns(3)
