@@ -273,7 +273,9 @@ def main():
         if f and f in all_features and f not in removed_from_ui
     ] + ['40-50', '50-60', '60-70', '90-100', '100-110', '110-120']
 
-    ordered = [f for f in important_order if f in all_features] + [f for f in all_features if f not in important_order and f not in removed_from_ui]
+    ordered = [f for f in important_order if f in all_features] + [
+        f for f in all_features if f not in important_order and f not in removed_from_ui
+    ]
 
     with st.sidebar:
         st.subheader('Управление')
@@ -284,44 +286,50 @@ def main():
     selected_features = ordered[:8] if not show_more else ordered[:16]
     user_values = {}
 
-    st.markdown('## Входные данные')
-    st.caption('Во входах оставлены отдельные параметры сырья: содержание метана и содержание этана.')
+    left, right = st.columns([0.95, 1.55])
 
-    c1, c2 = st.columns(2)
-    for i, feat in enumerate(selected_features):
-        fallback = medians.get(feat, 0.0)
-        lo, hi, med = get_limits(ref_df, feat, fallback)
-        value = med if use_demo else fallback
-        step = max((hi - lo) / 100, 0.0001)
-        fmt = '%.4f' if abs(hi) < 10 else '%.2f'
-        with (c1 if i % 2 == 0 else c2):
-            user_values[feat] = st.number_input(
-                feat,
-                min_value=float(lo),
-                max_value=float(hi),
-                value=float(value),
-                step=float(step),
-                format=fmt,
-            )
+    with left:
+        st.markdown('## Входные данные')
+        st.caption('Во входах оставлены отдельные параметры сырья: содержание метана и содержание этана.')
+
+        c1, c2 = st.columns(2)
+        for i, feat in enumerate(selected_features):
+            fallback = medians.get(feat, 0.0)
+            lo, hi, med = get_limits(ref_df, feat, fallback)
+            value = med if use_demo else fallback
+            step = max((hi - lo) / 100, 0.0001)
+            fmt = '%.4f' if abs(hi) < 10 else '%.2f'
+
+            with (c1 if i % 2 == 0 else c2):
+                user_values[feat] = st.number_input(
+                    feat,
+                    min_value=float(lo),
+                    max_value=float(hi),
+                    value=float(value),
+                    step=float(step),
+                    format=fmt,
+                    key=f'input_{i}'
+                )
 
     temp_pred, press_pred = predict_values(artifacts, user_values)
 
     methane_label = methane_feat if methane_feat else 'Содержание метана'
     ethane_label = ethane_feat if ethane_feat else 'Содержание этана'
 
-    main_scheme(
-        temp_pred=temp_pred,
-        press_pred=press_pred,
-        methane_label=methane_label,
-        ethane_label=ethane_label,
-        methane_val=display_value(user_values, medians, methane_feat),
-        ethane_val=display_value(user_values, medians, ethane_feat),
-        top_val=display_value(user_values, medians, TOP_TEMP),
-        hot_val=display_value(user_values, medians, HOT_ZONE),
-        cold_val=display_value(user_values, medians, COLD_ZONE),
-        kgd_val=display_value(user_values, medians, KGD_MASS),
-        excess_val=display_value(user_values, medians, EXCESS),
-    )
+    with right:
+        main_scheme(
+            temp_pred=temp_pred,
+            press_pred=press_pred,
+            methane_label=methane_label,
+            ethane_label=ethane_label,
+            methane_val=display_value(user_values, medians, methane_feat),
+            ethane_val=display_value(user_values, medians, ethane_feat),
+            top_val=display_value(user_values, medians, TOP_TEMP),
+            hot_val=display_value(user_values, medians, HOT_ZONE),
+            cold_val=display_value(user_values, medians, COLD_ZONE),
+            kgd_val=display_value(user_values, medians, KGD_MASS),
+            excess_val=display_value(user_values, medians, EXCESS),
+        )
 
     st.markdown('## Рекомендуемые параметры в рефлюксной емкости')
     m1, m2 = st.columns(2)
