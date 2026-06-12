@@ -216,8 +216,8 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                left:2%;
-                top:4%;
+                left:0%;
+                top:6%;
                 width:240px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
@@ -240,8 +240,8 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                left:2%;
-                top:20%;
+                left:0%;
+                top:30%;
                 width:240px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
