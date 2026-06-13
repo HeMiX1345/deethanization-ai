@@ -177,195 +177,197 @@ def render_scheme_with_overlay(
 
     html = f"""
     <div style="
-        background:linear-gradient(180deg,#f5f8f3 0%,#eef3ec 100%);
-        border:1px solid #cfd8cd;
-        border-radius:22px;
-        padding:18px 18px 24px 18px;
+        width:100%;
+        display:flex;
+        justify-content:center;
+        align-items:flex-start;
+        padding:8px 0 18px 0;
         font-family:Arial,sans-serif;
     ">
-        <div style="margin-bottom:18px;">
-            <div style="font-size:28px;font-weight:800;color:#203321;">Деэтанизации конденсата</div>
-            <div style="font-size:13px;color:#627262;margin-top:4px;">
-                Расчёт рекомендуемых параметров ведется из условия деэтанизации конденсата в рефлюксной емкости
-            </div>
-        </div>
-
         <div style="
-            position:relative;
             width:100%;
-            max-width:1220px;
-            margin:0 auto;
-            min-height:980px;
+            max-width:1260px;
+            background:linear-gradient(180deg,#f5f8f3 0%,#eef3ec 100%);
+            border:1px solid #cfd8cd;
+            border-radius:22px;
+            padding:22px 22px 26px 22px;
+            box-sizing:border-box;
         ">
+            <div style="margin-bottom:18px;">
+                <div style="font-size:30px;font-weight:800;color:#203321;">Деэтанизации конденсата</div>
+                <div style="font-size:13px;color:#627262;margin-top:4px;">
+                    Расчёт рекомендуемых параметров ведется из условия деэтанизации конденсата в рефлюксной емкости
+                </div>
+            </div>
 
-            <img
-                src="data:image/jpeg;base64,{img_b64}"
-                style="
+            <div style="
+                position:relative;
+                width:100%;
+                min-height:760px;
+            ">
+                <div style="
                     position:absolute;
                     left:50%;
                     top:44%;
                     transform:translate(-50%,-50%);
                     width:58%;
-                    max-width:640px;
-                    display:block;
-                    border-radius:18px;
-                    box-shadow:0 10px 28px rgba(0,0,0,0.10);
-                "
-            />
+                    max-width:720px;
+                    height:430px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    background:#ffffff;
+                    border:4px solid #202020;
+                    box-sizing:border-box;
+                ">
+                    <img
+                        src="data:image/jpeg;base64,{img_b64}"
+                        style="
+                            max-width:100%;
+                            max-height:100%;
+                            object-fit:contain;
+                            display:block;
+                        "
+                    />
+                </div>
 
-            <div style="
-                position:absolute;
-                left:6%;
-                top:10%;
-                width:250px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-            ">
-                <div style="font-size:14px;font-weight:700;color:#304530;margin-bottom:8px;">Рекомендуемые параметры</div>
-                <div style="display:grid;grid-template-columns:1fr;gap:8px;">
-                    <div style="background:#f4f8f4;border-radius:12px;padding:9px 10px;border:1px solid #dde5db;">
-                        <div style="font-size:11px;color:#6d776d;">Температура, ℃</div>
-                        <div style="font-size:22px;font-weight:800;color:#1c6d34;">{temp_pred:.2f}</div>
+                <div style="
+                    position:absolute;
+                    left:2.5%;
+                    top:8%;
+                    width:170px;
+                    min-height:96px;
+                    background:#fffffff2;
+                    border:3px solid #202020;
+                    border-radius:0;
+                    padding:10px 10px;
+                    box-sizing:border-box;
+                ">
+                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Рекомендуемые параметры</div>
+                    <div style="font-size:11px;color:#555;">Температура, ℃</div>
+                    <div style="font-size:18px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
+                    <div style="font-size:11px;color:#555;">Давление, МПа</div>
+                    <div style="font-size:18px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
+                </div>
+
+                <div style="
+                    position:absolute;
+                    left:2.5%;
+                    top:34%;
+                    width:170px;
+                    min-height:86px;
+                    background:#fffffff2;
+                    border:3px solid #202020;
+                    border-radius:0;
+                    padding:10px 10px;
+                    box-sizing:border-box;
+                ">
+                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Сырье</div>
+                    <div style="font-size:11px;color:#555;">{methane_label}</div>
+                    <div style="font-size:16px;font-weight:800;color:#245a2d;margin-bottom:6px;">{methane_val:.4f}</div>
+                    <div style="font-size:11px;color:#555;">{ethane_label}</div>
+                    <div style="font-size:16px;font-weight:800;color:#245a2d;">{ethane_val:.4f}</div>
+                </div>
+
+                <div style="
+                    position:absolute;
+                    left:2.5%;
+                    top:58%;
+                    width:170px;
+                    min-height:108px;
+                    background:#fffffff2;
+                    border:3px solid #202020;
+                    border-radius:0;
+                    padding:10px 10px;
+                    box-sizing:border-box;
+                ">
+                    <div style="font-size:12px;color:#333;">E-301</div>
+                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Рекомендуемые параметры</div>
+                    <div style="font-size:11px;color:#555;">Температура, ℃</div>
+                    <div style="font-size:16px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
+                    <div style="font-size:11px;color:#555;">Давление, МПа</div>
+                    <div style="font-size:16px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
+                </div>
+
+                <div style="
+                    position:absolute;
+                    right:2.5%;
+                    top:8%;
+                    width:170px;
+                    min-height:86px;
+                    background:#fffffff2;
+                    border:3px solid #202020;
+                    border-radius:0;
+                    padding:10px 10px;
+                    box-sizing:border-box;
+                ">
+                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">K-301</div>
+                    <div style="font-size:11px;color:#555;">Температура верха</div>
+                    <div style="font-size:15px;font-weight:800;color:#234c28;margin-bottom:4px;">{top_val:.2f} ℃</div>
+                    <div style="font-size:11px;color:#555;">Гор. зона</div>
+                    <div style="font-size:15px;font-weight:800;color:#234c28;margin-bottom:4px;">{hot_val:.2f} ℃</div>
+                    <div style="font-size:11px;color:#555;">Хол. зона</div>
+                    <div style="font-size:15px;font-weight:800;color:#234c28;">{cold_val:.2f} ℃</div>
+                </div>
+
+                <div style="
+                    position:absolute;
+                    right:2.5%;
+                    top:40%;
+                    width:170px;
+                    min-height:86px;
+                    background:#fffffff2;
+                    border:3px solid #202020;
+                    border-radius:0;
+                    padding:10px 10px;
+                    box-sizing:border-box;
+                ">
+                    <div style="font-size:12px;color:#333;">Между K-301 и ВХ-302</div>
+                    <div style="font-size:12px;color:#555;margin-top:8px;">Масса КГД</div>
+                    <div style="font-size:20px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
+                </div>
+
+                <div style="
+                    position:absolute;
+                    right:2.5%;
+                    top:66%;
+                    width:170px;
+                    min-height:86px;
+                    background:#fffffff2;
+                    border:3px solid #202020;
+                    border-radius:0;
+                    padding:10px 10px;
+                    box-sizing:border-box;
+                ">
+                    <div style="font-size:12px;color:#333;">ВХ-302</div>
+                    <div style="font-size:12px;color:#555;margin-top:8px;">Вывод балансового избытка</div>
+                    <div style="font-size:20px;font-weight:800;color:#245a2d;">{excess_val:.2f}</div>
+                </div>
+
+                <div style="
+                    position:absolute;
+                    left:50%;
+                    bottom:2%;
+                    transform:translateX(-50%);
+                    width:240px;
+                    min-height:42px;
+                    background:#fffffff2;
+                    border:3px solid #202020;
+                    border-radius:0;
+                    padding:8px 12px;
+                    box-sizing:border-box;
+                    text-align:left;
+                ">
+                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:4px;">Расчет</div>
+                    <div style="font-size:11px;color:#555;line-height:1.35;">
+                        Расчёт выполнен на основе введенных параметров сырья и режима работы колонны.
                     </div>
-                    <div style="background:#f4f7fb;border-radius:12px;padding:9px 10px;border:1px solid #d8e0eb;">
-                        <div style="font-size:11px;color:#6d776d;">Давление, МПа</div>
-                        <div style="font-size:22px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
-                    </div>
                 </div>
-            </div>
-
-            <div style="
-                position:absolute;
-                left:50%;
-                top:8%;
-                transform:translateX(-50%);
-                width:260px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-                text-align:left;
-            ">
-                <div style="font-size:12px;color:#687368;">E-301</div>
-                <div style="font-size:14px;font-weight:700;color:#304530;margin-bottom:8px;">Рекомендуемые параметры</div>
-                <div style="font-size:11px;color:#6d776d;">Температура, ℃</div>
-                <div style="font-size:22px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
-                <div style="font-size:11px;color:#6d776d;">Давление, МПа</div>
-                <div style="font-size:22px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
-            </div>
-
-            <div style="
-                position:absolute;
-                right:4%;
-                top:26%;
-                width:250px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-            ">
-                <div style="font-size:14px;font-weight:700;color:#304530;margin-bottom:8px;">Сырье</div>
-                <div style="background:#f8faf8;border:1px solid #e0e7e0;border-radius:10px;padding:8px 10px;margin-bottom:8px;">
-                    <div style="font-size:11px;color:#6e786e;">{methane_label}</div>
-                    <div style="font-size:18px;font-weight:800;color:#245a2d;">{methane_val:.4f}</div>
-                </div>
-                <div style="background:#f8faf8;border:1px solid #e0e7e0;border-radius:10px;padding:8px 10px;">
-                    <div style="font-size:11px;color:#6e786e;">{ethane_label}</div>
-                    <div style="font-size:18px;font-weight:800;color:#245a2d;">{ethane_val:.4f}</div>
-                </div>
-            </div>
-
-            <div style="
-                position:absolute;
-                left:24%;
-                top:72%;
-                transform:translateX(-50%);
-                width:260px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-            ">
-                <div style="font-size:14px;font-weight:700;color:#304530;margin-bottom:8px;">K-301</div>
-                <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;">
-                    <span style="font-size:11px;color:#6d776d;">Температура верха</span>
-                    <strong style="font-size:13px;color:#234c28;">{top_val:.2f} ℃</strong>
-                </div>
-                <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;">
-                    <span style="font-size:11px;color:#6d776d;">Темп-ра в гор. зоне</span>
-                    <strong style="font-size:13px;color:#234c28;">{hot_val:.2f} ℃</strong>
-                </div>
-                <div style="display:flex;justify-content:space-between;gap:8px;">
-                    <span style="font-size:11px;color:#6d776d;">Темп-ра в хол. зоне</span>
-                    <strong style="font-size:13px;color:#234c28;">{cold_val:.2f} ℃</strong>
-                </div>
-            </div>
-
-            <div style="
-                position:absolute;
-                left:50%;
-                top:74%;
-                transform:translateX(-50%);
-                width:240px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-            ">
-                <div style="font-size:13px;font-weight:700;color:#304530;margin-bottom:8px;">Расчет</div>
-                <div style="font-size:12px;color:#6d776d;line-height:1.45;">
-                    Результаты формируются на основе введенных параметров сырья и режима работы колонны.
-                </div>
-                <div style="margin-top:10px;display:inline-flex;align-items:center;gap:8px;background:#f6faf6;border:1px solid #dfe9df;border-radius:999px;padding:6px 10px;">
-                    <span style="width:10px;height:10px;background:#2e7d32;border-radius:50%;display:inline-block;"></span>
-                    <span style="font-size:12px;color:#2e5130;font-weight:700;">Расчёт выполнен</span>
-                </div>
-            </div>
-
-            <div style="
-                position:absolute;
-                left:44%;
-                bottom:4%;
-                transform:translateX(-50%);
-                width:220px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-            ">
-                <div style="font-size:11px;color:#687368;">Между K-301 и ВХ-302</div>
-                <div style="font-size:12px;color:#677267;">Масса КГД</div>
-                <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
-            </div>
-
-            <div style="
-                position:absolute;
-                left:64%;
-                bottom:4%;
-                transform:translateX(-50%);
-                width:220px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-            ">
-                <div style="font-size:11px;color:#687368;">ВХ-302</div>
-                <div style="font-size:12px;color:#677267;">Вывод балансового избытка</div>
-                <div style="font-size:22px;font-weight:800;color:#245a2d;">{excess_val:.2f}</div>
             </div>
         </div>
     </div>
     """
-    components.html(html, height=1040, scrolling=False)
+    components.html(html, height=860, scrolling=False)
 
 
 def main():
