@@ -424,7 +424,7 @@ def main():
     selected_features = ordered[:8] if not show_more else ordered[:16]
     user_values = {}
 
-        selected_features = ordered[:8] if not show_more else ordered[:16]
+    selected_features = ordered[:8] if not show_more else ordered[:16]
     user_values = {}
 
     st.markdown("## Входные данные")
