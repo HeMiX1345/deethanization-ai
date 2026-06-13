@@ -183,31 +183,30 @@ def render_scheme_with_overlay(
         padding:18px 18px 24px 18px;
         font-family:Arial,sans-serif;
     ">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
-            <div>
-                <div style="font-size:28px;font-weight:800;color:#203321;">Деэтанизации конденсата</div>
-                <div style="font-size:13px;color:#627262;margin-top:4px;">
-                    Расчёт рекомендуемых параметров ведется из условия деэтанизации конденсата в рефлюксной емкости
-                </div>
+        <div style="margin-bottom:18px;">
+            <div style="font-size:28px;font-weight:800;color:#203321;">Деэтанизации конденсата</div>
+            <div style="font-size:13px;color:#627262;margin-top:4px;">
+                Расчёт рекомендуемых параметров ведется из условия деэтанизации конденсата в рефлюксной емкости
             </div>
         </div>
 
         <div style="
             position:relative;
             width:100%;
-            max-width:1180px;
+            max-width:1220px;
             margin:0 auto;
-            min-height:900px;
+            min-height:980px;
         ">
+
             <img
                 src="data:image/jpeg;base64,{img_b64}"
                 style="
                     position:absolute;
                     left:50%;
-                    top:52%;
+                    top:44%;
                     transform:translate(-50%,-50%);
-                    width:74%;
-                    max-width:860px;
+                    width:58%;
+                    max-width:640px;
                     display:block;
                     border-radius:18px;
                     box-shadow:0 10px 28px rgba(0,0,0,0.10);
@@ -216,9 +215,9 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                left:0%;
-                top:6%;
-                width:240px;
+                left:6%;
+                top:10%;
+                width:250px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
                 border-radius:16px;
@@ -240,9 +239,30 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                left:0%;
-                top:30%;
-                width:240px;
+                left:50%;
+                top:8%;
+                transform:translateX(-50%);
+                width:260px;
+                background:#fffffff2;
+                border:1px solid #d7ddd7;
+                border-radius:16px;
+                padding:12px 14px;
+                box-shadow:0 4px 12px rgba(0,0,0,0.08);
+                text-align:left;
+            ">
+                <div style="font-size:12px;color:#687368;">E-301</div>
+                <div style="font-size:14px;font-weight:700;color:#304530;margin-bottom:8px;">Рекомендуемые параметры</div>
+                <div style="font-size:11px;color:#6d776d;">Температура, ℃</div>
+                <div style="font-size:22px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
+                <div style="font-size:11px;color:#6d776d;">Давление, МПа</div>
+                <div style="font-size:22px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
+            </div>
+
+            <div style="
+                position:absolute;
+                right:4%;
+                top:26%;
+                width:250px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
                 border-radius:16px;
@@ -262,9 +282,10 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                left:2%;
-                top:58%;
-                width:240px;
+                left:24%;
+                top:72%;
+                transform:translateX(-50%);
+                width:260px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
                 border-radius:16px;
@@ -288,27 +309,9 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                right:2%;
-                top:18%;
-                width:240px;
-                background:#fffffff2;
-                border:1px solid #d7ddd7;
-                border-radius:16px;
-                padding:12px 14px;
-                box-shadow:0 4px 12px rgba(0,0,0,0.08);
-            ">
-                <div style="font-size:12px;color:#687368;">E-301</div>
-                <div style="font-size:14px;font-weight:700;color:#304530;margin-bottom:8px;">Рекомендуемые параметры</div>
-                <div style="font-size:11px;color:#6d776d;">Температура, ℃</div>
-                <div style="font-size:22px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
-                <div style="font-size:11px;color:#6d776d;">Давление, МПа</div>
-                <div style="font-size:22px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
-            </div>
-
-            <div style="
-                position:absolute;
-                right:2%;
-                top:46%;
+                left:50%;
+                top:74%;
+                transform:translateX(-50%);
                 width:240px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
@@ -328,9 +331,10 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                left:34%;
-                bottom:5%;
-                width:230px;
+                left:44%;
+                bottom:4%;
+                transform:translateX(-50%);
+                width:220px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
                 border-radius:16px;
@@ -344,9 +348,10 @@ def render_scheme_with_overlay(
 
             <div style="
                 position:absolute;
-                right:16%;
-                bottom:5%;
-                width:230px;
+                left:64%;
+                bottom:4%;
+                transform:translateX(-50%);
+                width:220px;
                 background:#fffffff2;
                 border:1px solid #d7ddd7;
                 border-radius:16px;
@@ -360,7 +365,7 @@ def render_scheme_with_overlay(
         </div>
     </div>
     """
-    components.html(html, height=980, scrolling=False)
+    components.html(html, height=1040, scrolling=False)
 
 
 def main():
