@@ -324,7 +324,7 @@ def render_scheme_with_overlay(
                         <div style="font-size:11px;color:#555;">Гор. зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
                         <div style="font-size:11px;color:#555;">Хол. зона</div>
-                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} ℃</div>
                     </div>
 
                     <div style="
