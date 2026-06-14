@@ -185,6 +185,7 @@ def render_scheme_with_overlay(
     hot_val,
     cold_val,
     kgd_val,
+    excess_val
 ):
     if scheme_path is None:
         st.warning("Не найдено изображение схемы установки. Положите файл 7-3.jpg рядом с app.py.")
@@ -312,6 +313,18 @@ def render_scheme_with_overlay(
                         <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
                         <div style="font-size:11px;color:#555;">тонн/час</div>
                     </div>
+
+                    <div style="
+                        background:#ffffff;
+                        border:3px solid #202020;
+                        padding:14px 16px;
+                        box-sizing:border-box;
+                    ">
+                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса выхода</div>
+                        <div style="font-size:11px;color:#555;">Вывод балансового избытка</div>
+                        <div style="font-size:22px;font-weight:800;color:#245a2d;margin-bottom:4px;">{excess_val:.2f}</div>
+                        <div style="font-size:10px;color:#666;">тонн/час</div>
+                    </div>
                 </div>
             </div>
 
@@ -428,6 +441,7 @@ def main():
         hot_val=display_value(user_values, medians, HOT_ZONE),
         cold_val=display_value(user_values, medians, COLD_ZONE),
         kgd_val=display_value(user_values, medians, KGD_MASS),
+        excess_val=display_value(user_values, medians, EXCESS),
     )
 
     st.markdown("## Рекомендуемые параметры в рефлюксной емкости")
