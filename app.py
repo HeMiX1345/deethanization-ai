@@ -82,6 +82,22 @@ def find_reference_dataset():
     return None
 
 
+def find_column_in_all_datasets(column_name):
+    """Ищет колонку во всех датасетах и возвращает данные из неё"""
+    for path in DATA_CANDIDATES:
+        if path.exists():
+            try:
+                df = pd.read_csv(path, sep=";", decimal=".", encoding="utf-8-sig")
+                df.columns = [str(c).strip() for c in df.columns]
+                
+                if column_name in df.columns:
+                    series = pd.to_numeric(df[column_name], errors="coerce").dropna()
+                    return series
+            except Exception:
+                continue
+    return None
+
+
 def find_scheme_image():
     for path in SCHEME_IMAGE_CANDIDATES:
         if path.exists():
@@ -93,37 +109,33 @@ def image_to_base64(path: Path):
     return base64.b64encode(path.read_bytes()).decode("utf-8")
 
 
-def get_kgd_mass_median(ref_df, feature, fallback_value):
+def get_kgd_mass_median(column_name):
     """Получить медианное значение массы КГД только из адекватных значений (100-250 тонн/час)"""
-    st.write(f"🔍 Отладка KGD: ref_df={'None' if ref_df is None else 'OK'}, feature='{feature}', fallback={fallback_value}")
+    series = find_column_in_all_datasets(column_name)
     
-    if ref_df is not None:
-        st.write(f"🔍 Колонки в ref_df: {list(ref_df.columns)}")
+    if series is not None and not series.empty:
+        print(f"🔍 Найдено значений в колонке '{column_name}': {len(series)}")
+        print(f"🔍 Мин: {series.min()}, Макс: {series.max()}")
         
-        if feature in ref_df.columns:
-            series = pd.to_numeric(ref_df[feature], errors="coerce").dropna()
-            st.write(f"🔍 Всего значений: {len(series)}, мин={series.min() if len(series) > 0 else 'N/A'}, макс={series.max() if len(series) > 0 else 'N/A'}")
-            
-            # Фильтруем значения от 100 до 250 тонн/час
-            valid_series = series[(series >= 100) & (series <= 250)]
-            st.write(f"🔍 Значений в диапазоне 100-250: {len(valid_series)}")
-            
-            if not valid_series.empty:
-                median_val = float(valid_series.median())
-                st.write(f"✅ Найдена медиана из диапазона 100-250: {median_val}")
-                return median_val
-            
-            # Если нет значений в диапазоне 100-250, берем все значения > 10
-            positive_series = series[series > 10]
-            st.write(f"🔍 Значений > 10: {len(positive_series)}")
-            
-            if not positive_series.empty:
-                median_val = float(positive_series.median())
-                st.write(f"✅ Найдена медиана из значений > 10: {median_val}")
-                return median_val
+        # Фильтруем значения от 100 до 250 тонн/час
+        valid_series = series[(series >= 100) & (series <= 250)]
+        print(f"🔍 Значений в диапазоне 100-250: {len(valid_series)}")
+        
+        if not valid_series.empty:
+            median_val = float(valid_series.median())
+            print(f"✅ Найдена медиана из диапазона 100-250: {median_val}")
+            return median_val
+        
+        # Если нет значений в диапазоне 100-250, берем все положительные значения > 10
+        positive_series = series[series > 10]
+        print(f"🔍 Значений > 10: {len(positive_series)}")
+        
+        if not positive_series.empty:
+            median_val = float(positive_series.median())
+            print(f"✅ Найдена медиана из значений > 10: {median_val}")
+            return median_val
     
-    # Если нет адекватных данных, возвращаем разумное значение по умолчанию
-    st.write(f"⚠️ Используется fallback значение: 150.0")
+    print(f"⚠️ Колонка '{column_name}' не найдена или пуста, используем fallback: 150.0")
     return 150.0
 
 
@@ -426,19 +438,11 @@ def main():
     for feat, val in artifacts["press_medians"].items():
         medians.setdefault(feat, val)
 
-    # Принудительная проверка массы КГД
-    st.write(f"🔍 KGD_MASS='{KGD_MASS}', есть в medians: {KGD_MASS in medians}, текущее значение: {medians.get(KGD_MASS, 'NOT FOUND')}")
-    
+    # Принудительная проверка массы КГД - ищем в правильном датасете
     if KGD_MASS in medians:
         old_val = medians[KGD_MASS]
-        medians[KGD_MASS] = get_kgd_mass_median(ref_df, KGD_MASS, medians[KGD_MASS])
-        st.write(f"🔄 KGD изменено с {old_val} на {medians[KGD_MASS]}")
-    else:
-        st.warning(f"⚠️ KGD_MASS='{KGD_MASS}' не найден в medians! Доступные ключи: {list(medians.keys())}")
-        # Попробуем найти похожее название
-        for key in medians.keys():
-            if "КГД" in str(key) or "масса" in str(key).lower():
-                st.write(f" Возможно, это нужная колонка: '{key}' со значением {medians[key]}")
+        medians[KGD_MASS] = get_kgd_mass_median(KGD_MASS)
+        print(f" KGD изменено с {old_val} на {medians[KGD_MASS]}")
 
     important_order = [
         f
