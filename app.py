@@ -433,13 +433,13 @@ def main():
     input_cols = st.columns(4)
     for i, feat in enumerate(selected_features):
     # Для метана и этана используем фиксированные значения по умолчанию
-        if feat == "Содержание метана в сырье":
+        if feat == "Содержание метана":
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
-        elif feat == "Содержание этана в сырье":
+        elif feat == "Содержание этана":
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
-        elif feat == "Содержание пропана в сырье":
+        elif feat == "Содержание пропана":
             # Для пропана берем значение из датасета
             fallback = medians.get("пропан", 0.05)
             lo, hi, med = get_limits(ref_df, "пропан", fallback)
