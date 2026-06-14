@@ -95,20 +95,36 @@ def image_to_base64(path: Path):
 
 def get_kgd_mass_median(ref_df, feature, fallback_value):
     """Получить медианное значение массы КГД только из адекватных значений (100-250 тонн/час)"""
-    if ref_df is not None and feature in ref_df.columns:
-        series = pd.to_numeric(ref_df[feature], errors="coerce").dropna()
-        # Фильтруем значения от 100 до 250 тонн/час
-        valid_series = series[(series >= 100) & (series <= 250)]
-        if not valid_series.empty:
-            median_val = float(valid_series.median())
-            return median_val
-        # Если нет значений в диапазоне 100-250, берем все положительные значения > 1
-        positive_series = series[series > 1]
-        if not positive_series.empty:
-            return float(positive_series.median())
+    st.write(f"🔍 Отладка KGD: ref_df={'None' if ref_df is None else 'OK'}, feature='{feature}', fallback={fallback_value}")
     
-    # Если нет адекватных данных, возвращаем fallback
-    return float(fallback_value) if pd.notna(fallback_value) else 150.0
+    if ref_df is not None:
+        st.write(f"🔍 Колонки в ref_df: {list(ref_df.columns)}")
+        
+        if feature in ref_df.columns:
+            series = pd.to_numeric(ref_df[feature], errors="coerce").dropna()
+            st.write(f"🔍 Всего значений: {len(series)}, мин={series.min() if len(series) > 0 else 'N/A'}, макс={series.max() if len(series) > 0 else 'N/A'}")
+            
+            # Фильтруем значения от 100 до 250 тонн/час
+            valid_series = series[(series >= 100) & (series <= 250)]
+            st.write(f"🔍 Значений в диапазоне 100-250: {len(valid_series)}")
+            
+            if not valid_series.empty:
+                median_val = float(valid_series.median())
+                st.write(f"✅ Найдена медиана из диапазона 100-250: {median_val}")
+                return median_val
+            
+            # Если нет значений в диапазоне 100-250, берем все значения > 10
+            positive_series = series[series > 10]
+            st.write(f"🔍 Значений > 10: {len(positive_series)}")
+            
+            if not positive_series.empty:
+                median_val = float(positive_series.median())
+                st.write(f"✅ Найдена медиана из значений > 10: {median_val}")
+                return median_val
+    
+    # Если нет адекватных данных, возвращаем разумное значение по умолчанию
+    st.write(f"⚠️ Используется fallback значение: 150.0")
+    return 150.0
 
 
 def get_limits(df, feature, fallback_value):
@@ -410,9 +426,19 @@ def main():
     for feat, val in artifacts["press_medians"].items():
         medians.setdefault(feat, val)
 
-    # ДОБАВЛЕНА ПРОВЕРКА для массы КГД - берем медиану только из значений 100-250 тонн/час
+    # Принудительная проверка массы КГД
+    st.write(f"🔍 KGD_MASS='{KGD_MASS}', есть в medians: {KGD_MASS in medians}, текущее значение: {medians.get(KGD_MASS, 'NOT FOUND')}")
+    
     if KGD_MASS in medians:
+        old_val = medians[KGD_MASS]
         medians[KGD_MASS] = get_kgd_mass_median(ref_df, KGD_MASS, medians[KGD_MASS])
+        st.write(f"🔄 KGD изменено с {old_val} на {medians[KGD_MASS]}")
+    else:
+        st.warning(f"⚠️ KGD_MASS='{KGD_MASS}' не найден в medians! Доступные ключи: {list(medians.keys())}")
+        # Попробуем найти похожее название
+        for key in medians.keys():
+            if "КГД" in str(key) or "масса" in str(key).lower():
+                st.write(f" Возможно, это нужная колонка: '{key}' со значением {medians[key]}")
 
     important_order = [
         f
