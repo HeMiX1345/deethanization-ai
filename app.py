@@ -464,7 +464,6 @@ def main():
     user_values = {}
 
     st.markdown("## Входные данные")
-    st.caption("Во входах оставлены отдельные параметры сырья: содержание метана и содержание этана.")
 
     input_cols = st.columns(4)
     for i, feat in enumerate(selected_features):
