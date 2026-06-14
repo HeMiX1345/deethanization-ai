@@ -192,14 +192,14 @@ def render_scheme_with_overlay(
     <div style="
         width:100%;
         display:flex;
-        justify-content:center;
-        align-items:flex-start;
+        flex-direction:column;
+        align-items:center;
         padding:8px 0 18px 0;
         font-family:Arial,sans-serif;
     ">
         <div style="
             width:100%;
-            max-width:1400px;
+            max-width:1500px;
             background:linear-gradient(180deg,#f5f8f3 0%,#eef3ec 100%);
             border:1px solid #cfd8cd;
             border-radius:22px;
@@ -213,155 +213,153 @@ def render_scheme_with_overlay(
                 </div>
             </div>
 
+            <!-- Основной контейнер: три колонки -->
             <div style="
-                position:relative;
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:16px;
                 width:100%;
-                min-height:850px;
             ">
-                <!-- Увеличенная схема установки -->
+                <!-- ЛЕВАЯ КОЛОНКА: карточки E-301 и Сырье -->
                 <div style="
-                    position:absolute;
-                    left:50%;
-                    top:50%;
-                    transform:translate(-50%,-50%);
-                    width:70%;
-                    max-width:900px;
-                    height:520px;
                     display:flex;
-                    align-items:center;
+                    flex-direction:column;
+                    gap:16px;
+                    min-width:200px;
+                    max-width:220px;
+                    flex-shrink:0;
+                ">
+                    <!-- E-301 Рекомендуемые параметры -->
+                    <div style="
+                        background:#ffffff;
+                        border:3px solid #202020;
+                        padding:14px 16px;
+                        box-sizing:border-box;
+                    ">
+                        <div style="font-size:12px;color:#333;margin-bottom:2px;">E-301</div>
+                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">Рекомендуемые параметры</div>
+                        <div style="font-size:11px;color:#555;">Температура, ℃</div>
+                        <div style="font-size:20px;font-weight:800;color:#1c6d34;margin-bottom:8px;">{temp_pred:.2f}</div>
+                        <div style="font-size:11px;color:#555;">Давление, МПа</div>
+                        <div style="font-size:20px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
+                    </div>
+
+                    <!-- Сырье -->
+                    <div style="
+                        background:#ffffff;
+                        border:3px solid #202020;
+                        padding:14px 16px;
+                        box-sizing:border-box;
+                    ">
+                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">Сырье</div>
+                        <div style="font-size:11px;color:#555;">{methane_label}</div>
+                        <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{methane_val:.4f}</div>
+                        <div style="font-size:11px;color:#555;">{ethane_label}</div>
+                        <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{ethane_val:.4f}</div>
+                        <div style="font-size:10px;color:#666;">система измерения: масса в долях</div>
+                    </div>
+                </div>
+
+                <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА: схема установки -->
+                <div style="
+                    flex:1;
+                    display:flex;
                     justify-content:center;
+                    align-items:center;
+                    min-height:560px;
+                ">
+                    <div style="
+                        width:100%;
+                        max-width:900px;
+                        background:#ffffff;
+                        border:4px solid #202020;
+                        box-sizing:border-box;
+                        padding:10px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                    ">
+                        <img
+                            src="data:image/jpeg;base64,{img_b64}"
+                            style="
+                                width:100%;
+                                height:auto;
+                                max-height:540px;
+                                object-fit:contain;
+                                display:block;
+                            "
+                        />
+                    </div>
+                </div>
+
+                <!-- ПРАВАЯ КОЛОНКА: карточки K-301, Масса КГД, Масса выхода -->
+                <div style="
+                    display:flex;
+                    flex-direction:column;
+                    gap:16px;
+                    min-width:200px;
+                    max-width:220px;
+                    flex-shrink:0;
+                ">
+                    <!-- K-301 температуры -->
+                    <div style="
+                        background:#ffffff;
+                        border:3px solid #202020;
+                        padding:14px 16px;
+                        box-sizing:border-box;
+                    ">
+                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
+                        <div style="font-size:11px;color:#555;">Температура верха</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
+                        <div style="font-size:11px;color:#555;">Гор. зона</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
+                        <div style="font-size:11px;color:#555;">Хол. зона</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
+                    </div>
+
+                    <!-- Масса КГД -->
+                    <div style="
+                        background:#ffffff;
+                        border:3px solid #202020;
+                        padding:14px 16px;
+                        box-sizing:border-box;
+                    ">
+                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса КГД</div>
+                        <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
+                    </div>
+
+                    <!-- Масса выхода -->
+                    <div style="
+                        background:#ffffff;
+                        border:3px solid #202020;
+                        padding:14px 16px;
+                        box-sizing:border-box;
+                    ">
+                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса выхода</div>
+                        <div style="font-size:11px;color:#555;">Вывод балансового избытка</div>
+                        <div style="font-size:22px;font-weight:800;color:#245a2d;margin-bottom:4px;">{excess_val:.2f}</div>
+                        <div style="font-size:10px;color:#666;">система исчисления: тонн/час</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Карточка Расчет - снизу по центру -->
+            <div style="
+                display:flex;
+                justify-content:center;
+                margin-top:20px;
+            ">
+                <div style="
                     background:#ffffff;
-                    border:4px solid #202020;
-                    box-sizing:border-box;
-                ">
-                    <img
-                        src="data:image/jpeg;base64,{img_b64}"
-                        style="
-                            max-width:100%;
-                            max-height:100%;
-                            object-fit:contain;
-                            display:block;
-                        "
-                    />
-                </div>
-
-                <!-- E-301 Рекомендуемые параметры (слева сверху) -->
-                <div style="
-                    position:absolute;
-                    left:2%;
-                    top:5%;
-                    width:190px;
-                    min-height:110px;
-                    background:#fffffff2;
                     border:3px solid #202020;
-                    border-radius:0;
-                    padding:12px 12px;
+                    padding:12px 18px;
                     box-sizing:border-box;
-                ">
-                    <div style="font-size:12px;color:#333;margin-bottom:4px;">E-301</div>
-                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Рекомендуемые параметры</div>
-                    <div style="font-size:11px;color:#555;">Температура, ℃</div>
-                    <div style="font-size:18px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
-                    <div style="font-size:11px;color:#555;">Давление, МПа</div>
-                    <div style="font-size:18px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
-                </div>
-
-                <!-- Сырье (слева посередине) -->
-                <div style="
-                    position:absolute;
-                    left:2%;
-                    top:28%;
-                    width:190px;
-                    min-height:110px;
-                    background:#fffffff2;
-                    border:3px solid #202020;
-                    border-radius:0;
-                    padding:12px 12px;
-                    box-sizing:border-box;
-                ">
-                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Сырье</div>
-                    <div style="font-size:11px;color:#555;">{methane_label}</div>
-                    <div style="font-size:16px;font-weight:800;color:#245a2d;margin-bottom:6px;">{methane_val:.4f}</div>
-                    <div style="font-size:11px;color:#555;">{ethane_label}</div>
-                    <div style="font-size:16px;font-weight:800;color:#245a2d;">{ethane_val:.4f}</div>
-                    <div style="font-size:10px;color:#666;margin-top:6px;">система измерения: масса в долях</div>
-                </div>
-
-                <!-- K-301 температуры (справа сверху) -->
-                <div style="
-                    position:absolute;
-                    right:2%;
-                    top:5%;
-                    width:200px;
-                    min-height:120px;
-                    background:#fffffff2;
-                    border:3px solid #202020;
-                    border-radius:0;
-                    padding:12px 12px;
-                    box-sizing:border-box;
-                ">
-                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">K-301</div>
-                    <div style="font-size:11px;color:#555;">Температура верха</div>
-                    <div style="font-size:16px;font-weight:800;color:#234c28;margin-bottom:4px;">{top_val:.2f} ℃</div>
-                    <div style="font-size:11px;color:#555;">Гор. зона</div>
-                    <div style="font-size:16px;font-weight:800;color:#234c28;margin-bottom:4px;">{hot_val:.2f} ℃</div>
-                    <div style="font-size:11px;color:#555;">Хол. зона</div>
-                    <div style="font-size:16px;font-weight:800;color:#234c28;">{cold_val:.2f} ℃</div>
-                </div>
-
-                <!-- Масса КГД (справа посередине) - убрана надпись "Между K-301 и ВХ-302" -->
-                <div style="
-                    position:absolute;
-                    right:2%;
-                    top:32%;
-                    width:200px;
-                    min-height:90px;
-                    background:#fffffff2;
-                    border:3px solid #202020;
-                    border-radius:0;
-                    padding:12px 12px;
-                    box-sizing:border-box;
-                ">
-                    <div style="font-size:12px;color:#555;margin-bottom:4px;">Масса КГД</div>
-                    <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
-                </div>
-
-                <!-- Вывод балансового избытка (справа снизу) - добавлено "Масса выхода" и "тонн/час" -->
-                <div style="
-                    position:absolute;
-                    right:2%;
-                    top:52%;
-                    width:200px;
-                    min-height:100px;
-                    background:#fffffff2;
-                    border:3px solid #202020;
-                    border-radius:0;
-                    padding:12px 12px;
-                    box-sizing:border-box;
-                ">
-                    <div style="font-size:12px;color:#333;margin-bottom:4px;">Масса выхода</div>
-                    <div style="font-size:12px;color:#555;">Вывод балансового избытка</div>
-                    <div style="font-size:22px;font-weight:800;color:#245a2d;">{excess_val:.2f}</div>
-                    <div style="font-size:10px;color:#666;margin-top:4px;">система исчисления: тонн/час</div>
-                </div>
-
-                <!-- Расчет (снизу по центру) -->
-                <div style="
-                    position:absolute;
-                    left:50%;
-                    bottom:2%;
-                    transform:translateX(-50%);
-                    width:280px;
-                    min-height:50px;
-                    background:#fffffff2;
-                    border:3px solid #202020;
-                    border-radius:0;
-                    padding:10px 14px;
-                    box-sizing:border-box;
+                    max-width:380px;
                     text-align:left;
                 ">
-                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:4px;">Расчет</div>
-                    <div style="font-size:11px;color:#555;line-height:1.35;">
+                    <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:4px;">Расчет</div>
+                    <div style="font-size:11px;color:#555;line-height:1.4;">
                         Расчёт выполнен на основе введенных параметров сырья и режима работы колонны.
                     </div>
                 </div>
@@ -369,7 +367,7 @@ def render_scheme_with_overlay(
         </div>
     </div>
     """
-    components.html(html, height=950, scrolling=False)
+    components.html(html, height=820, scrolling=False)
 
 
 def main():
