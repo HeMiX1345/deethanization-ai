@@ -37,21 +37,6 @@ COLD_ZONE = "K-301 Темп-ра в хол. зоне"
 EXCESS = "Вывод балансового избытка"
 KGD_MASS = "Масса КГД из куба колонны"
 
-# Отображаемые названия (для UI)
-METHANE_DISPLAY = "Содержание метана в сырье"
-ETHANE_DISPLAY = "Содержание этана в сырье"
-PROPANE_DISPLAY = "Содержание пропана в сырье"
-
-# Маппинг: отображаемое название -> реальное название в датасете/модели
-FEATURE_NAME_MAP = {
-    METHANE_DISPLAY: "Содержание метана",
-    ETHANE_DISPLAY: "Содержание этана",
-    PROPANE_DISPLAY: "пропан",
-}
-
-# Обратный маппинг: реальное название -> отображаемое
-DISPLAY_NAME_MAP = {v: k for k, v in FEATURE_NAME_MAP.items()}
-
 REMOVED_FROM_UI = {
     "Метан+этан из жидкости в Е-301",
     "Метан+этан из жидкости в E-301",
@@ -60,6 +45,9 @@ REMOVED_FROM_UI = {
     "110-120",
     "140-150",
     "520-540",
+    "Содержание метана в сырье",
+    "Содержание этана в сырье",
+    "Содержание пропана в сырье",
 }
 
 
@@ -161,9 +149,7 @@ def get_limits(df, feature, fallback_value):
 def build_input_frame(features, medians, user_values):
     row = {}
     for feat in features:
-        # Если feat — это отображаемое название, конвертируем в реальное
-        real_feat = FEATURE_NAME_MAP.get(feat, feat)
-        row[feat] = user_values.get(feat, medians.get(real_feat, 0.0))
+        row[feat] = user_values.get(feat, medians.get(feat, 0.0))
     return pd.DataFrame([row])
 
 
@@ -195,13 +181,10 @@ def render_scheme_with_overlay(
     scheme_path,
     temp_pred,
     press_pred,
-    methane_val,
-    ethane_val,
     top_val,
     hot_val,
     cold_val,
     kgd_val,
-    excess_val,
 ):
     if scheme_path is None:
         st.warning("Не найдено изображение схемы установки. Положите файл 7-3.jpg рядом с app.py.")
@@ -262,20 +245,6 @@ def render_scheme_with_overlay(
                         <div style="font-size:11px;color:#555;">Давление, МПа</div>
                         <div style="font-size:20px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
                     </div>
-
-                    <div style="
-                        background:#ffffff;
-                        border:3px solid #202020;
-                        padding:14px 16px;
-                        box-sizing:border-box;
-                    ">
-                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">Сырье</div>
-                        <div style="font-size:11px;color:#555;">Содержание метана</div>
-                        <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{methane_val:.4f}</div>
-                        <div style="font-size:11px;color:#555;">Содержание этана</div>
-                        <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{ethane_val:.4f}</div>
-                        <div style="font-size:10px;color:#666;">Массовые доли</div>
-                    </div>
                 </div>
 
                 <div style="
@@ -326,11 +295,10 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
                         <div style="font-size:11px;color:#555;">Температура верха</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
-                        <div style="font-size:11px;color:#555;">Температура низа</div>
                         <div style="font-size:11px;color:#555;">Горячая зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
                         <div style="font-size:11px;color:#555;">Холодная зона</div>
-                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} ℃</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
                     </div>
 
                     <div style="
@@ -341,19 +309,6 @@ def render_scheme_with_overlay(
                     ">
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса КГД</div>
                         <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
-                        <div style="font-size:10px;color:#666;">тонн/час</div>
-                    </div>
-
-                    <div style="
-                        background:#ffffff;
-                        border:3px solid #202020;
-                        padding:14px 16px;
-                        box-sizing:border-box;
-                    ">
-                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса выхода</div>
-                        <div style="font-size:11px;color:#555;">Вывод балансового избытка</div>
-                        <div style="font-size:22px;font-weight:800;color:#245a2d;margin-bottom:4px;">{excess_val:.2f}</div>
-                        <div style="font-size:10px;color:#666;">тонн/час</div>
                     </div>
                 </div>
             </div>
@@ -419,71 +374,46 @@ def main():
     if KGD_MASS in medians:
         medians[KGD_MASS] = get_kgd_mass_median(KGD_MASS)
 
-    # Порядок полей ввода с полными названиями "в сырье"
+    # Порядок полей ввода: только 4 параметра (без метана, этана, пропана и вывода избытка)
     important_order = [
-        METHANE_DISPLAY,
-        ETHANE_DISPLAY,
-        PROPANE_DISPLAY,
         TOP_TEMP,
         HOT_ZONE,
         COLD_ZONE,
-        EXCESS,
         KGD_MASS,
     ]
 
-    # Собираем ordered: сначала важные поля (включая сырьевые), потом остальные
-    raw_feed_features = {METHANE_DISPLAY, ETHANE_DISPLAY, PROPANE_DISPLAY}
-    
-    ordered = [f for f in important_order if f in raw_feed_features or f in all_features] + [
-        f for f in all_features if f not in important_order 
-        and f not in FEATURE_NAME_MAP.values()  # исключаем реальные названия сырья, чтобы не дублировать
-        and f not in REMOVED_FROM_UI
+    ordered = [f for f in important_order if f in all_features] + [
+        f for f in all_features if f not in important_order and f not in REMOVED_FROM_UI
     ]
 
     with st.sidebar:
         st.subheader("Управление")
-        st.write("Изменяйте параметры сырья и режима работы. Рекомендуемые параметры обновляются автоматически.")
+        st.write("Изменяйте параметры режима работы. Рекомендуемые параметры обновляются автоматически.")
         show_more = st.checkbox("Показать расширенный ввод", value=False)
         use_demo = st.button("Заполнить demo-значениями")
 
-    selected_features = ordered[:8] if not show_more else ordered[:16]
+    selected_features = ordered[:4] if not show_more else ordered[:8]
     user_values = {}
 
     st.markdown("## Входные данные")
 
     input_cols = st.columns(4)
     for i, feat in enumerate(selected_features):
-        # Получаем реальное название колонки в датасете
-        real_feat = FEATURE_NAME_MAP.get(feat, feat)
-        
-        if feat == METHANE_DISPLAY:
-            fallback = 0.035
-            lo, hi, med = -0.1, 0.5, fallback
-        elif feat == ETHANE_DISPLAY:
-            fallback = 0.035
-            lo, hi, med = -0.1, 0.5, fallback
-        elif feat == PROPANE_DISPLAY:
-            # Для пропана берем значение из датасета по реальному названию "пропан"
-            fallback = medians.get(real_feat, 0.05)
-            lo, hi, med = get_limits(ref_df, real_feat, fallback)
-        else:
-            fallback = medians.get(real_feat, 0.0)
-            lo, hi, med = get_limits(ref_df, real_feat, fallback)
-    
+        fallback = medians.get(feat, 0.0)
+        lo, hi, med = get_limits(ref_df, feat, fallback)
         value = med if use_demo else fallback
         step = max((hi - lo) / 100, 0.0001) if hi != lo else 0.01
         fmt = "%.4f" if abs(hi) < 10 else "%.2f"
 
         with input_cols[i % 4]:
             user_values[feat] = st.number_input(
-                feat,  # Отображаемое название: "Содержание метана в сырье"
+                feat,
                 value=float(value),
                 step=float(step),
                 format=fmt,
                 key=f"input_{i}_{feat}",
             )
 
-    # Передаём medians в predict_values для корректного маппинга
     temp_pred, press_pred = predict_values(artifacts, user_values, medians)
 
     st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
@@ -492,13 +422,10 @@ def main():
         scheme_path=scheme_path,
         temp_pred=temp_pred,
         press_pred=press_pred,
-        methane_val=user_values.get(METHANE_DISPLAY, 0.035),
-        ethane_val=user_values.get(ETHANE_DISPLAY, 0.035),
         top_val=display_value(user_values, medians, TOP_TEMP),
         hot_val=display_value(user_values, medians, HOT_ZONE),
         cold_val=display_value(user_values, medians, COLD_ZONE),
         kgd_val=display_value(user_values, medians, KGD_MASS),
-        excess_val=display_value(user_values, medians, EXCESS),
     )
 
     st.markdown("## Рекомендуемые параметры в рефлюксной емкости")
@@ -512,7 +439,7 @@ def main():
         preview = pd.DataFrame(
             {
                 "feature": all_features,
-                "value": [user_values.get(DISPLAY_NAME_MAP.get(f, f), medians.get(f, 0.0)) for f in all_features],
+                "value": [user_values.get(f, medians.get(f, 0.0)) for f in all_features],
             }
         )
         st.dataframe(preview, use_container_width=True, hide_index=True)
