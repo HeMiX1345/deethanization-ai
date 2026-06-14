@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Деэтанизации конденсата", page_icon="️", layout="wide")
+st.set_page_config(page_title="Деэтанизации конденсата", page_icon="⚙️", layout="wide")
 
 MODEL_DIR = Path("saved") if Path("saved").exists() else Path(".")
 TEMP_MODEL_PATH = MODEL_DIR / "model_temp.pkl"
@@ -36,7 +36,21 @@ HOT_ZONE = "K-301 Темп-ра в гор. зоне"
 COLD_ZONE = "K-301 Темп-ра в хол. зоне"
 EXCESS = "Вывод балансового избытка"
 KGD_MASS = "Масса КГД из куба колонны"
-PROPANE_FEAT = "пропан"
+
+# Отображаемые названия (для UI)
+METHANE_DISPLAY = "Содержание метана в сырье"
+ETHANE_DISPLAY = "Содержание этана в сырье"
+PROPANE_DISPLAY = "Содержание пропана в сырье"
+
+# Маппинг: отображаемое название -> реальное название в датасете/модели
+FEATURE_NAME_MAP = {
+    METHANE_DISPLAY: "Содержание метана",
+    ETHANE_DISPLAY: "Содержание этана",
+    PROPANE_DISPLAY: "пропан",
+}
+
+# Обратный маппинг: реальное название -> отображаемое
+DISPLAY_NAME_MAP = {v: k for k, v in FEATURE_NAME_MAP.items()}
 
 REMOVED_FROM_UI = {
     "Метан+этан из жидкости в Е-301",
@@ -107,12 +121,10 @@ def get_kgd_mass_median(column_name):
                 if column_name in df.columns:
                     series = pd.to_numeric(df[column_name], errors="coerce").dropna()
                     if not series.empty:
-                        # Фильтруем значения от 100 до 250 тонн/час
                         valid_series = series[(series >= 100) & (series <= 250)]
                         if not valid_series.empty:
                             return float(valid_series.median())
                         
-                        # Если нет значений в диапазоне 100-250, берем все положительные значения > 10
                         positive_series = series[series > 10]
                         if not positive_series.empty:
                             return float(positive_series.median())
@@ -149,13 +161,15 @@ def get_limits(df, feature, fallback_value):
 def build_input_frame(features, medians, user_values):
     row = {}
     for feat in features:
-        row[feat] = user_values.get(feat, medians.get(feat, 0.0))
+        # Если feat — это отображаемое название, конвертируем в реальное
+        real_feat = FEATURE_NAME_MAP.get(feat, feat)
+        row[feat] = user_values.get(feat, medians.get(real_feat, 0.0))
     return pd.DataFrame([row])
 
 
-def predict_values(artifacts, user_values):
-    temp_X = build_input_frame(artifacts["temp_features"], artifacts["temp_medians"], user_values)
-    press_X = build_input_frame(artifacts["press_features"], artifacts["press_medians"], user_values)
+def predict_values(artifacts, user_values, medians):
+    temp_X = build_input_frame(artifacts["temp_features"], medians, user_values)
+    press_X = build_input_frame(artifacts["press_features"], medians, user_values)
     temp_pred = float(artifacts["temp_model"].predict(temp_X)[0])
     press_pred = float(artifacts["press_model"].predict(press_X)[0])
     return temp_pred, press_pred
@@ -403,11 +417,11 @@ def main():
     if KGD_MASS in medians:
         medians[KGD_MASS] = get_kgd_mass_median(KGD_MASS)
 
-    # Порядок полей ввода: метан, этан, пропан, температуры, избыток, масса КГД
+    # Порядок полей ввода с полными названиями "в сырье"
     important_order = [
-        "Содержание метана",
-        "Содержание этана",
-        "Содержание пропана",
+        METHANE_DISPLAY,
+        ETHANE_DISPLAY,
+        PROPANE_DISPLAY,
         TOP_TEMP,
         HOT_ZONE,
         COLD_ZONE,
@@ -415,8 +429,13 @@ def main():
         KGD_MASS,
     ]
 
-    ordered = [f for f in important_order if f in all_features or f in ["Содержание метана", "Содержание этана"]] + [
-        f for f in all_features if f not in important_order and f not in REMOVED_FROM_UI
+    # Собираем ordered: сначала важные поля (включая сырьевые), потом остальные
+    raw_feed_features = {METHANE_DISPLAY, ETHANE_DISPLAY, PROPANE_DISPLAY}
+    
+    ordered = [f for f in important_order if f in raw_feed_features or f in all_features] + [
+        f for f in all_features if f not in important_order 
+        and f not in FEATURE_NAME_MAP.values()  # исключаем реальные названия сырья, чтобы не дублировать
+        and f not in REMOVED_FROM_UI
     ]
 
     with st.sidebar:
@@ -432,20 +451,22 @@ def main():
 
     input_cols = st.columns(4)
     for i, feat in enumerate(selected_features):
-    # Для метана и этана используем фиксированные значения по умолчанию
-        if feat == "Содержание метана":
+        # Получаем реальное название колонки в датасете
+        real_feat = FEATURE_NAME_MAP.get(feat, feat)
+        
+        if feat == METHANE_DISPLAY:
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
-        elif feat == "Содержание этана":
+        elif feat == ETHANE_DISPLAY:
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
-        elif feat == "Содержание пропана":
-            # Для пропана берем значение из датасета
-            fallback = medians.get("пропан", 0.05)
-            lo, hi, med = get_limits(ref_df, "пропан", fallback)
+        elif feat == PROPANE_DISPLAY:
+            # Для пропана берем значение из датасета по реальному названию "пропан"
+            fallback = medians.get(real_feat, 0.05)
+            lo, hi, med = get_limits(ref_df, real_feat, fallback)
         else:
-            fallback = medians.get(feat, 0.0)
-            lo, hi, med = get_limits(ref_df, feat, fallback)
+            fallback = medians.get(real_feat, 0.0)
+            lo, hi, med = get_limits(ref_df, real_feat, fallback)
     
         value = med if use_demo else fallback
         step = max((hi - lo) / 100, 0.0001) if hi != lo else 0.01
@@ -453,14 +474,15 @@ def main():
 
         with input_cols[i % 4]:
             user_values[feat] = st.number_input(
-                feat,  # Здесь будет "Содержание пропана" для отображения
+                feat,  # Отображаемое название: "Содержание метана в сырье"
                 value=float(value),
                 step=float(step),
                 format=fmt,
                 key=f"input_{i}_{feat}",
             )
 
-    temp_pred, press_pred = predict_values(artifacts, user_values)
+    # Передаём medians в predict_values для корректного маппинга
+    temp_pred, press_pred = predict_values(artifacts, user_values, medians)
 
     st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
 
@@ -468,8 +490,8 @@ def main():
         scheme_path=scheme_path,
         temp_pred=temp_pred,
         press_pred=press_pred,
-        methane_val=user_values.get("Содержание метана", 0.035),
-        ethane_val=user_values.get("Содержание этана", 0.035),
+        methane_val=user_values.get(METHANE_DISPLAY, 0.035),
+        ethane_val=user_values.get(ETHANE_DISPLAY, 0.035),
         top_val=display_value(user_values, medians, TOP_TEMP),
         hot_val=display_value(user_values, medians, HOT_ZONE),
         cold_val=display_value(user_values, medians, COLD_ZONE),
@@ -488,7 +510,7 @@ def main():
         preview = pd.DataFrame(
             {
                 "feature": all_features,
-                "value": [user_values.get(f, medians.get(f, 0.0)) for f in all_features],
+                "value": [user_values.get(DISPLAY_NAME_MAP.get(f, f), medians.get(f, 0.0)) for f in all_features],
             }
         )
         st.dataframe(preview, use_container_width=True, hide_index=True)
