@@ -315,7 +315,6 @@ def render_scheme_with_overlay(
                     padding:10px 10px;
                     box-sizing:border-box;
                 ">
-                    <div style="font-size:12px;color:#333;">ВХ-302</div>
                     <div style="font-size:12px;color:#555;margin-top:8px;">Вывод балансового избытка</div>
                     <div style="font-size:20px;font-weight:800;color:#245a2d;">{excess_val:.2f}</div>
                 </div>
