@@ -95,15 +95,20 @@ def image_to_base64(path: Path):
 
 def get_kgd_mass_median(ref_df, feature, fallback_value):
     """Получить медианное значение массы КГД только из адекватных значений (100-250 тонн/час)"""
-    if ref_df is not None and feature in ref_df.columns and pd.api.types.is_numeric_dtype(ref_df[feature]):
+    if ref_df is not None and feature in ref_df.columns:
         series = pd.to_numeric(ref_df[feature], errors="coerce").dropna()
         # Фильтруем значения от 100 до 250 тонн/час
         valid_series = series[(series >= 100) & (series <= 250)]
         if not valid_series.empty:
-            return float(valid_series.median())
+            median_val = float(valid_series.median())
+            return median_val
+        # Если нет значений в диапазоне 100-250, берем все положительные значения > 1
+        positive_series = series[series > 1]
+        if not positive_series.empty:
+            return float(positive_series.median())
     
     # Если нет адекватных данных, возвращаем fallback
-    return float(fallback_value) if pd.notna(fallback_value) else 0.0
+    return float(fallback_value) if pd.notna(fallback_value) else 150.0
 
 
 def get_limits(df, feature, fallback_value):
@@ -436,14 +441,12 @@ def main():
         fallback = medians.get(feat, 0.0)
         lo, hi, med = get_limits(ref_df, feat, fallback)
         value = med if use_demo else fallback
-        step = max((hi - lo) / 100, 0.0001)
+        step = max((hi - lo) / 100, 0.0001) if hi != lo else 0.01
         fmt = "%.4f" if abs(hi) < 10 else "%.2f"
 
         with input_cols[i % 4]:
             user_values[feat] = st.number_input(
                 feat,
-                min_value=float(lo),
-                max_value=float(hi),
                 value=float(value),
                 step=float(step),
                 format=fmt,
