@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Деэтанизации конденсата", page_icon="⚙️", layout="wide")
+st.set_page_config(page_title="Деэтанизации конденсата", page_icon="️", layout="wide")
 
 MODEL_DIR = Path("saved") if Path("saved").exists() else Path(".")
 TEMP_MODEL_PATH = MODEL_DIR / "model_temp.pkl"
@@ -31,22 +31,21 @@ SCHEME_IMAGE_CANDIDATES = [
     Path("assets/7-3.jpg"),
 ]
 
-METHANE_CANDIDATES = ["Содержание метана", "Метан", "CH4", "Содержание метана в сырье"]
-ETHANE_CANDIDATES = ["Содержание этана", "Этан", "C2H6", "Содержание этана в сырье"]
-
 TOP_TEMP = "K-301 Температура верха"
 HOT_ZONE = "K-301 Темп-ра в гор. зоне"
 COLD_ZONE = "K-301 Темп-ра в хол. зоне"
 EXCESS = "Вывод балансового избытка"
 KGD_MASS = "Масса КГД из куба колонны"
-
-# Добавляем константы для метана и этана
-METHANE_FEAT = "Содержание метана"
-ETHANE_FEAT = "Содержание этана"
+PROPANE_FEAT = "пропан"
 
 REMOVED_FROM_UI = {
     "Метан+этан из жидкости в Е-301",
     "Метан+этан из жидкости в E-301",
+    "90-100",
+    "100-110",
+    "110-120",
+    "140-150",
+    "520-540",
 }
 
 
@@ -174,13 +173,6 @@ def metric_box(label, value, unit="", color="#1f5131", bg="#ffffff"):
     )
 
 
-def find_first_existing(candidates, all_features):
-    for item in candidates:
-        if item in all_features:
-            return item
-    return None
-
-
 def display_value(user_values, medians, feat):
     return float(user_values.get(feat, medians.get(feat, 0.0))) if feat else 0.0
 
@@ -268,7 +260,7 @@ def render_scheme_with_overlay(
                         <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{methane_val:.4f}</div>
                         <div style="font-size:11px;color:#555;">Содержание этана</div>
                         <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{ethane_val:.4f}</div>
-                        <div style="font-size:10px;color:#666;">массовые доли</div>
+                        <div style="font-size:10px;color:#666;">система измерения: масса в долях</div>
                     </div>
                 </div>
 
@@ -320,11 +312,10 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
                         <div style="font-size:11px;color:#555;">Температура верха</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
-                        <div style="font-size:11px;color:#555;">Температура низа</div>
                         <div style="font-size:11px;color:#555;">Гор. зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
                         <div style="font-size:11px;color:#555;">Хол. зона</div>
-                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} ℃</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
                     </div>
 
                     <div style="
@@ -335,7 +326,6 @@ def render_scheme_with_overlay(
                     ">
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса КГД</div>
                         <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
-                        <div style="font-size:10px;color:#666;">тонн/час</div>
                     </div>
 
                     <div style="
@@ -347,7 +337,7 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса выхода</div>
                         <div style="font-size:11px;color:#555;">Вывод балансового избытка</div>
                         <div style="font-size:22px;font-weight:800;color:#245a2d;margin-bottom:4px;">{excess_val:.2f}</div>
-                        <div style="font-size:10px;color:#666;">тонн/час</div>
+                        <div style="font-size:10px;color:#666;">система исчисления: тонн/час</div>
                     </div>
                 </div>
             </div>
@@ -413,10 +403,11 @@ def main():
     if KGD_MASS in medians:
         medians[KGD_MASS] = get_kgd_mass_median(KGD_MASS)
 
-    # Убираем диапазоны и добавляем только нужные поля
+    # Порядок полей ввода: метан, этан, пропан, температуры, избыток, масса КГД
     important_order = [
-        METHANE_FEAT,
-        ETHANE_FEAT,
+        "Содержание метана",
+        "Содержание этана",
+        PROPANE_FEAT,
         TOP_TEMP,
         HOT_ZONE,
         COLD_ZONE,
@@ -424,7 +415,7 @@ def main():
         KGD_MASS,
     ]
 
-    ordered = [f for f in important_order if f in all_features or f in [METHANE_FEAT, ETHANE_FEAT]] + [
+    ordered = [f for f in important_order if f in all_features or f in ["Содержание метана", "Содержание этана"]] + [
         f for f in all_features if f not in important_order and f not in REMOVED_FROM_UI
     ]
 
@@ -438,15 +429,15 @@ def main():
     user_values = {}
 
     st.markdown("## Входные данные")
-    st.caption("Во входах оставлены отдельные параметры сырья: содержание метана и содержание этана.")
+    st.caption("Во входах оставлены отдельные параметры сырья: содержание метана, этана и пропана.")
 
     input_cols = st.columns(4)
     for i, feat in enumerate(selected_features):
-        # Для метана и этана используем fallback значения
-        if feat == METHANE_FEAT:
+        # Для метана и этана используем фиксированные значения по умолчанию
+        if feat == "Содержание метана":
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
-        elif feat == ETHANE_FEAT:
+        elif feat == "Содержание этана":
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
         else:
@@ -474,8 +465,8 @@ def main():
         scheme_path=scheme_path,
         temp_pred=temp_pred,
         press_pred=press_pred,
-        methane_val=user_values.get(METHANE_FEAT, 0.035),
-        ethane_val=user_values.get(ETHANE_FEAT, 0.035),
+        methane_val=user_values.get("Содержание метана", 0.035),
+        ethane_val=user_values.get("Содержание этана", 0.035),
         top_val=display_value(user_values, medians, TOP_TEMP),
         hot_val=display_value(user_values, medians, HOT_ZONE),
         cold_val=display_value(user_values, medians, COLD_ZONE),
@@ -486,7 +477,7 @@ def main():
     st.markdown("## Рекомендуемые параметры в рефлюксной емкости")
     m1, m2 = st.columns(2)
     with m1:
-        metric_box("Температура, ", f"{temp_pred:.2f}", "℃", "#1c6d34", "#f8fcf8")
+        metric_box("Температура, ℃", f"{temp_pred:.2f}", "℃", "#1c6d34", "#f8fcf8")
     with m2:
         metric_box("Давление, МПа", f"{press_pred:.3f}", "МПа", "#1f5fbf", "#f7faff")
 
