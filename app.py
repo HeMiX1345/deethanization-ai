@@ -36,7 +36,7 @@ HOT_ZONE = "K-301 Темп-ра в гор. зоне"
 COLD_ZONE = "K-301 Темп-ра в хол. зоне"
 EXCESS = "Вывод балансового избытка"
 KGD_MASS = "Масса КГД из куба колонны"
-PROPANE_FEAT = "пропан"
+PROPANE_FEAT = "Содержание пропана в сырье"
 
 REMOVED_FROM_UI = {
     "Метан+этан из жидкости в Е-301",
@@ -214,7 +214,7 @@ def render_scheme_with_overlay(
             box-sizing:border-box;
         ">
             <div style="margin-bottom:18px;">
-                <div style="font-size:30px;font-weight:800;color:#203321;">Деэтанизации конденсата</div>
+                <div style="font-size:30px;font-weight:800;color:#203321;">Установка деэтанизации конденсата</div>
                 <div style="font-size:13px;color:#627262;margin-top:4px;">
                     Расчёт рекомендуемых параметров ведется из условия деэтанизации конденсата в рефлюксной емкости
                 </div>
@@ -312,9 +312,9 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
                         <div style="font-size:11px;color:#555;">Температура верха</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
-                        <div style="font-size:11px;color:#555;">Гор. зона</div>
+                        <div style="font-size:11px;color:#555;">Горячая зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
-                        <div style="font-size:11px;color:#555;">Хол. зона</div>
+                        <div style="font-size:11px;color:#555;">Холодная зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
                     </div>
 
@@ -405,8 +405,8 @@ def main():
 
     # Порядок полей ввода: метан, этан, пропан, температуры, избыток, масса КГД
     important_order = [
-        "Содержание метана",
-        "Содержание этана",
+        "Содержание метана в сырье",
+        "Содержание этана в сырье",
         PROPANE_FEAT,
         TOP_TEMP,
         HOT_ZONE,
@@ -429,28 +429,31 @@ def main():
     user_values = {}
 
     st.markdown("## Входные данные")
-    st.caption("Во входах оставлены отдельные параметры сырья: содержание метана, этана и пропана.")
 
     input_cols = st.columns(4)
     for i, feat in enumerate(selected_features):
-        # Для метана и этана используем фиксированные значения по умолчанию
-        if feat == "Содержание метана":
+    # Для метана и этана используем фиксированные значения по умолчанию
+        if feat == "Содержание метана в сырье":
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
-        elif feat == "Содержание этана":
+        elif feat == "Содержание этана в сырье":
             fallback = 0.035
             lo, hi, med = -0.1, 0.5, fallback
+        elif feat == "Содержание пропана в сырье":
+            # Для пропана берем значение из датасета
+            fallback = medians.get("пропан", 0.05)
+            lo, hi, med = get_limits(ref_df, "пропан", fallback)
         else:
             fallback = medians.get(feat, 0.0)
             lo, hi, med = get_limits(ref_df, feat, fallback)
-        
+    
         value = med if use_demo else fallback
         step = max((hi - lo) / 100, 0.0001) if hi != lo else 0.01
         fmt = "%.4f" if abs(hi) < 10 else "%.2f"
 
         with input_cols[i % 4]:
             user_values[feat] = st.number_input(
-                feat,
+                feat,  # Здесь будет "Содержание пропана" для отображения
                 value=float(value),
                 step=float(step),
                 format=fmt,
