@@ -246,6 +246,22 @@ def render_scheme_with_overlay(
                         <div style="font-size:11px;color:#555;">Давление, МПа</div>
                         <div style="font-size:20px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
                     </div>
+
+                    <div style="
+                        background:#ffffff;
+                        border:3px solid #202020;
+                        padding:14px 16px;
+                        box-sizing:border-box;
+                    ">
+                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
+                        <div style="font-size:11px;color:#555;">Температура верха</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
+                        <div style="font-size:11px;color:#555;">Температура низа</div>
+                        <div style="font-size:11px;color:#555;">Горячая зона</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
+                        <div style="font-size:11px;color:#555;">Холодная зона</div>
+                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
+                    </div>
                 </div>
 
                 <div style="
@@ -287,21 +303,6 @@ def render_scheme_with_overlay(
                     max-width:220px;
                     flex-shrink:0;
                 ">
-                    <div style="
-                        background:#ffffff;
-                        border:3px solid #202020;
-                        padding:14px 16px;
-                        box-sizing:border-box;
-                    ">
-                        <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
-                        <div style="font-size:11px;color:#555;">Температура верха</div>
-                        <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
-                        <div style="font-size:11px;color:#555;">Температура низа</div>
-                        <div style="font-size:11px;color:#555;">Горячая зона</div>
-                        <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
-                        <div style="font-size:11px;color:#555;">Холодная зона</div>
-                        <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
-                    </div>
 
                     <div style="
                         background:#ffffff;
