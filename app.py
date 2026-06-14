@@ -40,6 +40,10 @@ COLD_ZONE = "K-301 Темп-ра в хол. зоне"
 EXCESS = "Вывод балансового избытка"
 KGD_MASS = "Масса КГД из куба колонны"
 
+# Добавляем константы для метана и этана
+METHANE_FEAT = "Содержание метана"
+ETHANE_FEAT = "Содержание этана"
+
 REMOVED_FROM_UI = {
     "Метан+этан из жидкости в Е-301",
     "Метан+этан из жидкости в E-301",
@@ -82,22 +86,6 @@ def find_reference_dataset():
     return None
 
 
-def find_column_in_all_datasets(column_name):
-    """Ищет колонку во всех датасетах и возвращает данные из неё"""
-    for path in DATA_CANDIDATES:
-        if path.exists():
-            try:
-                df = pd.read_csv(path, sep=";", decimal=".", encoding="utf-8-sig")
-                df.columns = [str(c).strip() for c in df.columns]
-                
-                if column_name in df.columns:
-                    series = pd.to_numeric(df[column_name], errors="coerce").dropna()
-                    return series
-            except Exception:
-                continue
-    return None
-
-
 def find_scheme_image():
     for path in SCHEME_IMAGE_CANDIDATES:
         if path.exists():
@@ -111,31 +99,27 @@ def image_to_base64(path: Path):
 
 def get_kgd_mass_median(column_name):
     """Получить медианное значение массы КГД только из адекватных значений (100-250 тонн/час)"""
-    series = find_column_in_all_datasets(column_name)
+    for path in DATA_CANDIDATES:
+        if path.exists():
+            try:
+                df = pd.read_csv(path, sep=";", decimal=".", encoding="utf-8-sig")
+                df.columns = [str(c).strip() for c in df.columns]
+                
+                if column_name in df.columns:
+                    series = pd.to_numeric(df[column_name], errors="coerce").dropna()
+                    if not series.empty:
+                        # Фильтруем значения от 100 до 250 тонн/час
+                        valid_series = series[(series >= 100) & (series <= 250)]
+                        if not valid_series.empty:
+                            return float(valid_series.median())
+                        
+                        # Если нет значений в диапазоне 100-250, берем все положительные значения > 10
+                        positive_series = series[series > 10]
+                        if not positive_series.empty:
+                            return float(positive_series.median())
+            except Exception:
+                continue
     
-    if series is not None and not series.empty:
-        print(f"🔍 Найдено значений в колонке '{column_name}': {len(series)}")
-        print(f"🔍 Мин: {series.min()}, Макс: {series.max()}")
-        
-        # Фильтруем значения от 100 до 250 тонн/час
-        valid_series = series[(series >= 100) & (series <= 250)]
-        print(f"🔍 Значений в диапазоне 100-250: {len(valid_series)}")
-        
-        if not valid_series.empty:
-            median_val = float(valid_series.median())
-            print(f"✅ Найдена медиана из диапазона 100-250: {median_val}")
-            return median_val
-        
-        # Если нет значений в диапазоне 100-250, берем все положительные значения > 10
-        positive_series = series[series > 10]
-        print(f"🔍 Значений > 10: {len(positive_series)}")
-        
-        if not positive_series.empty:
-            median_val = float(positive_series.median())
-            print(f"✅ Найдена медиана из значений > 10: {median_val}")
-            return median_val
-    
-    print(f"⚠️ Колонка '{column_name}' не найдена или пуста, используем fallback: 150.0")
     return 150.0
 
 
@@ -205,8 +189,6 @@ def render_scheme_with_overlay(
     scheme_path,
     temp_pred,
     press_pred,
-    methane_label,
-    ethane_label,
     methane_val,
     ethane_val,
     top_val,
@@ -246,7 +228,6 @@ def render_scheme_with_overlay(
                 </div>
             </div>
 
-            <!-- Основной контейнер: три колонки -->
             <div style="
                 display:flex;
                 justify-content:space-between;
@@ -254,7 +235,6 @@ def render_scheme_with_overlay(
                 gap:16px;
                 width:100%;
             ">
-                <!-- ЛЕВАЯ КОЛОНКА: карточки E-301 и Сырье -->
                 <div style="
                     display:flex;
                     flex-direction:column;
@@ -263,7 +243,6 @@ def render_scheme_with_overlay(
                     max-width:220px;
                     flex-shrink:0;
                 ">
-                    <!-- E-301 Рекомендуемые параметры -->
                     <div style="
                         background:#ffffff;
                         border:3px solid #202020;
@@ -278,7 +257,6 @@ def render_scheme_with_overlay(
                         <div style="font-size:20px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
                     </div>
 
-                    <!-- Сырье -->
                     <div style="
                         background:#ffffff;
                         border:3px solid #202020;
@@ -286,15 +264,14 @@ def render_scheme_with_overlay(
                         box-sizing:border-box;
                     ">
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">Сырье</div>
-                        <div style="font-size:11px;color:#555;">{methane_label}</div>
+                        <div style="font-size:11px;color:#555;">Содержание метана</div>
                         <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{methane_val:.4f}</div>
-                        <div style="font-size:11px;color:#555;">{ethane_label}</div>
+                        <div style="font-size:11px;color:#555;">Содержание этана</div>
                         <div style="font-size:18px;font-weight:800;color:#245a2d;margin-bottom:8px;">{ethane_val:.4f}</div>
-                        <div style="font-size:10px;color:#666;">система измерения: масса в долях</div>
+                        <div style="font-size:10px;color:#666;">массовые доли</div>
                     </div>
                 </div>
 
-                <!-- ЦЕНТРАЛЬНАЯ КОЛОНКА: схема установки -->
                 <div style="
                     flex:1;
                     display:flex;
@@ -326,7 +303,6 @@ def render_scheme_with_overlay(
                     </div>
                 </div>
 
-                <!-- ПРАВАЯ КОЛОНКА: карточки K-301, Масса КГД, Масса выхода -->
                 <div style="
                     display:flex;
                     flex-direction:column;
@@ -335,7 +311,6 @@ def render_scheme_with_overlay(
                     max-width:220px;
                     flex-shrink:0;
                 ">
-                    <!-- K-301 температуры -->
                     <div style="
                         background:#ffffff;
                         border:3px solid #202020;
@@ -345,13 +320,13 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
                         <div style="font-size:11px;color:#555;">Температура верха</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
+                        <div style="font-size:11px;color:#555;">Температура низа</div>
                         <div style="font-size:11px;color:#555;">Гор. зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
                         <div style="font-size:11px;color:#555;">Хол. зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;">{cold_val:.2f} </div>
                     </div>
 
-                    <!-- Масса КГД -->
                     <div style="
                         background:#ffffff;
                         border:3px solid #202020;
@@ -360,9 +335,9 @@ def render_scheme_with_overlay(
                     ">
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса КГД</div>
                         <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
+                        <div style="font-size:10px;color:#666;">тонн/час</div>
                     </div>
 
-                    <!-- Масса выхода -->
                     <div style="
                         background:#ffffff;
                         border:3px solid #202020;
@@ -372,12 +347,11 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса выхода</div>
                         <div style="font-size:11px;color:#555;">Вывод балансового избытка</div>
                         <div style="font-size:22px;font-weight:800;color:#245a2d;margin-bottom:4px;">{excess_val:.2f}</div>
-                        <div style="font-size:10px;color:#666;">система исчисления: тонн/час</div>
+                        <div style="font-size:10px;color:#666;">тонн/час</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Карточка Расчет - снизу по центру -->
             <div style="
                 display:flex;
                 justify-content:center;
@@ -429,28 +403,28 @@ def main():
     press_features = artifacts["press_features"]
     all_features = list(dict.fromkeys(temp_features + press_features))
 
-    methane_feat = find_first_existing(METHANE_CANDIDATES, all_features)
-    ethane_feat = find_first_existing(ETHANE_CANDIDATES, all_features)
-
     medians = {}
     for feat, val in artifacts["temp_medians"].items():
         medians[feat] = val
     for feat, val in artifacts["press_medians"].items():
         medians.setdefault(feat, val)
 
-    # Принудительная проверка массы КГД - ищем в правильном датасете
+    # Устанавливаем значение для массы КГД
     if KGD_MASS in medians:
-        old_val = medians[KGD_MASS]
         medians[KGD_MASS] = get_kgd_mass_median(KGD_MASS)
-        print(f" KGD изменено с {old_val} на {medians[KGD_MASS]}")
 
+    # Убираем диапазоны и добавляем только нужные поля
     important_order = [
-        f
-        for f in [methane_feat, ethane_feat, TOP_TEMP, HOT_ZONE, COLD_ZONE, EXCESS, KGD_MASS]
-        if f and f in all_features and f not in REMOVED_FROM_UI
-    ] + ["40-50", "50-60", "60-70", "90-100", "100-110", "110-120"]
+        METHANE_FEAT,
+        ETHANE_FEAT,
+        TOP_TEMP,
+        HOT_ZONE,
+        COLD_ZONE,
+        EXCESS,
+        KGD_MASS,
+    ]
 
-    ordered = [f for f in important_order if f in all_features] + [
+    ordered = [f for f in important_order if f in all_features or f in [METHANE_FEAT, ETHANE_FEAT]] + [
         f for f in all_features if f not in important_order and f not in REMOVED_FROM_UI
     ]
 
@@ -464,11 +438,21 @@ def main():
     user_values = {}
 
     st.markdown("## Входные данные")
+    st.caption("Во входах оставлены отдельные параметры сырья: содержание метана и содержание этана.")
 
     input_cols = st.columns(4)
     for i, feat in enumerate(selected_features):
-        fallback = medians.get(feat, 0.0)
-        lo, hi, med = get_limits(ref_df, feat, fallback)
+        # Для метана и этана используем fallback значения
+        if feat == METHANE_FEAT:
+            fallback = 0.035
+            lo, hi, med = -0.1, 0.5, fallback
+        elif feat == ETHANE_FEAT:
+            fallback = 0.035
+            lo, hi, med = -0.1, 0.5, fallback
+        else:
+            fallback = medians.get(feat, 0.0)
+            lo, hi, med = get_limits(ref_df, feat, fallback)
+        
         value = med if use_demo else fallback
         step = max((hi - lo) / 100, 0.0001) if hi != lo else 0.01
         fmt = "%.4f" if abs(hi) < 10 else "%.2f"
@@ -479,13 +463,10 @@ def main():
                 value=float(value),
                 step=float(step),
                 format=fmt,
-                key=f"input_{i}",
+                key=f"input_{i}_{feat}",
             )
 
     temp_pred, press_pred = predict_values(artifacts, user_values)
-
-    methane_label = methane_feat if methane_feat else "Содержание метана"
-    ethane_label = ethane_feat if ethane_feat else "Содержание этана"
 
     st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
 
@@ -493,10 +474,8 @@ def main():
         scheme_path=scheme_path,
         temp_pred=temp_pred,
         press_pred=press_pred,
-        methane_label=methane_label,
-        ethane_label=ethane_label,
-        methane_val=display_value(user_values, medians, methane_feat),
-        ethane_val=display_value(user_values, medians, ethane_feat),
+        methane_val=user_values.get(METHANE_FEAT, 0.035),
+        ethane_val=user_values.get(ETHANE_FEAT, 0.035),
         top_val=display_value(user_values, medians, TOP_TEMP),
         hot_val=display_value(user_values, medians, HOT_ZONE),
         cold_val=display_value(user_values, medians, COLD_ZONE),
@@ -507,7 +486,7 @@ def main():
     st.markdown("## Рекомендуемые параметры в рефлюксной емкости")
     m1, m2 = st.columns(2)
     with m1:
-        metric_box("Температура, ℃", f"{temp_pred:.2f}", "℃", "#1c6d34", "#f8fcf8")
+        metric_box("Температура, ", f"{temp_pred:.2f}", "℃", "#1c6d34", "#f8fcf8")
     with m2:
         metric_box("Давление, МПа", f"{press_pred:.3f}", "МПа", "#1f5fbf", "#f7faff")
 
