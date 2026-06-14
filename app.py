@@ -36,7 +36,7 @@ HOT_ZONE = "K-301 Темп-ра в гор. зоне"
 COLD_ZONE = "K-301 Темп-ра в хол. зоне"
 EXCESS = "Вывод балансового избытка"
 KGD_MASS = "Масса КГД из куба колонны"
-PROPANE_FEAT = "Содержание пропана"
+PROPANE_FEAT = "пропан"
 
 REMOVED_FROM_UI = {
     "Метан+этан из жидкости в Е-301",
@@ -407,7 +407,7 @@ def main():
     important_order = [
         "Содержание метана",
         "Содержание этана",
-        PROPANE_FEAT,
+        "Содержание пропана",
         TOP_TEMP,
         HOT_ZONE,
         COLD_ZONE,
