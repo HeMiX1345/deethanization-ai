@@ -93,30 +93,6 @@ def image_to_base64(path: Path):
     return base64.b64encode(path.read_bytes()).decode("utf-8")
 
 
-def get_limits(df, feature, fallback_value):
-    if df is not None and feature in df.columns and pd.api.types.is_numeric_dtype(df[feature]):
-        series = pd.to_numeric(df[feature], errors="coerce").dropna()
-        if not series.empty:
-            lo = float(series.quantile(0.05))
-            hi = float(series.quantile(0.95))
-            med = float(series.median())
-
-            if feature == COLD_ZONE:
-                q1 = float(series.quantile(0.25))
-                q3 = float(series.quantile(0.75))
-                lo, hi = q1, q3
-
-            if lo == hi:
-                lo, hi = float(series.min()), float(series.max())
-            if lo == hi:
-                lo -= 1.0
-                hi += 1.0
-            return lo, hi, med
-
-    v = float(fallback_value) if pd.notna(fallback_value) else 0.0
-    return v - abs(v) * 0.3 - 1, v + abs(v) * 0.3 + 1, v
-
-
 def build_input_frame(features, medians, user_values):
     row = {}
     for feat in features:
@@ -431,23 +407,6 @@ def main():
     st.caption("Во входах оставлены отдельные параметры сырья: содержание метана и содержание этана.")
 
     input_cols = st.columns(4)
-    for i, feat in enumerate(selected_features):
-        fallback = medians.get(feat, 0.0)
-        lo, hi, med = get_limits(ref_df, feat, fallback)
-        value = med if use_demo else fallback
-        step = max((hi - lo) / 100, 0.0001)
-        fmt = "%.4f" if abs(hi) < 10 else "%.2f"
-
-        with input_cols[i % 4]:
-            user_values[feat] = st.number_input(
-                feat,
-                min_value=float(lo),
-                max_value=float(hi),
-                value=float(value),
-                step=float(step),
-                format=fmt,
-                key=f"input_{i}",
-            )
 
     temp_pred, press_pred = predict_values(artifacts, user_values)
 
