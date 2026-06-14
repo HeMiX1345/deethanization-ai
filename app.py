@@ -93,6 +93,43 @@ def image_to_base64(path: Path):
     return base64.b64encode(path.read_bytes()).decode("utf-8")
 
 
+def get_kgd_mass_median(ref_df, feature, fallback_value):
+    """Получить медианное значение массы КГД только из адекватных значений (100-250 тонн/час)"""
+    if ref_df is not None and feature in ref_df.columns and pd.api.types.is_numeric_dtype(ref_df[feature]):
+        series = pd.to_numeric(ref_df[feature], errors="coerce").dropna()
+        # Фильтруем значения от 100 до 250 тонн/час
+        valid_series = series[(series >= 100) & (series <= 250)]
+        if not valid_series.empty:
+            return float(valid_series.median())
+    
+    # Если нет адекватных данных, возвращаем fallback
+    return float(fallback_value) if pd.notna(fallback_value) else 0.0
+
+
+def get_limits(df, feature, fallback_value):
+    if df is not None and feature in df.columns and pd.api.types.is_numeric_dtype(df[feature]):
+        series = pd.to_numeric(df[feature], errors="coerce").dropna()
+        if not series.empty:
+            lo = float(series.quantile(0.05))
+            hi = float(series.quantile(0.95))
+            med = float(series.median())
+
+            if feature == COLD_ZONE:
+                q1 = float(series.quantile(0.25))
+                q3 = float(series.quantile(0.75))
+                lo, hi = q1, q3
+
+            if lo == hi:
+                lo, hi = float(series.min()), float(series.max())
+            if lo == hi:
+                lo -= 1.0
+                hi += 1.0
+            return lo, hi, med
+
+    v = float(fallback_value) if pd.notna(fallback_value) else 0.0
+    return v - abs(v) * 0.3 - 1, v + abs(v) * 0.3 + 1, v
+
+
 def build_input_frame(features, medians, user_values):
     row = {}
     for feat in features:
@@ -162,7 +199,7 @@ def render_scheme_with_overlay(
     ">
         <div style="
             width:100%;
-            max-width:1260px;
+            max-width:1400px;
             background:linear-gradient(180deg,#f5f8f3 0%,#eef3ec 100%);
             border:1px solid #cfd8cd;
             border-radius:22px;
@@ -179,16 +216,17 @@ def render_scheme_with_overlay(
             <div style="
                 position:relative;
                 width:100%;
-                min-height:760px;
+                min-height:850px;
             ">
+                <!-- Увеличенная схема установки -->
                 <div style="
                     position:absolute;
                     left:50%;
-                    top:44%;
+                    top:50%;
                     transform:translate(-50%,-50%);
-                    width:58%;
-                    max-width:720px;
-                    height:430px;
+                    width:70%;
+                    max-width:900px;
+                    height:520px;
                     display:flex;
                     align-items:center;
                     justify-content:center;
@@ -207,18 +245,20 @@ def render_scheme_with_overlay(
                     />
                 </div>
 
+                <!-- E-301 Рекомендуемые параметры (слева сверху) -->
                 <div style="
                     position:absolute;
-                    left:2.5%;
-                    top:8%;
-                    width:170px;
-                    min-height:96px;
+                    left:2%;
+                    top:5%;
+                    width:190px;
+                    min-height:110px;
                     background:#fffffff2;
                     border:3px solid #202020;
                     border-radius:0;
-                    padding:10px 10px;
+                    padding:12px 12px;
                     box-sizing:border-box;
                 ">
+                    <div style="font-size:12px;color:#333;margin-bottom:4px;">E-301</div>
                     <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Рекомендуемые параметры</div>
                     <div style="font-size:11px;color:#555;">Температура, ℃</div>
                     <div style="font-size:18px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
@@ -226,16 +266,17 @@ def render_scheme_with_overlay(
                     <div style="font-size:18px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
                 </div>
 
+                <!-- Сырье (слева посередине) -->
                 <div style="
                     position:absolute;
-                    left:2.5%;
-                    top:34%;
-                    width:170px;
-                    min-height:86px;
+                    left:2%;
+                    top:28%;
+                    width:190px;
+                    min-height:110px;
                     background:#fffffff2;
                     border:3px solid #202020;
                     border-radius:0;
-                    padding:10px 10px;
+                    padding:12px 12px;
                     box-sizing:border-box;
                 ">
                     <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Сырье</div>
@@ -243,93 +284,79 @@ def render_scheme_with_overlay(
                     <div style="font-size:16px;font-weight:800;color:#245a2d;margin-bottom:6px;">{methane_val:.4f}</div>
                     <div style="font-size:11px;color:#555;">{ethane_label}</div>
                     <div style="font-size:16px;font-weight:800;color:#245a2d;">{ethane_val:.4f}</div>
+                    <div style="font-size:10px;color:#666;margin-top:6px;">система измерения: масса в долях</div>
                 </div>
 
+                <!-- K-301 температуры (справа сверху) -->
                 <div style="
                     position:absolute;
-                    left:2.5%;
-                    top:58%;
-                    width:170px;
-                    min-height:108px;
+                    right:2%;
+                    top:5%;
+                    width:200px;
+                    min-height:120px;
                     background:#fffffff2;
                     border:3px solid #202020;
                     border-radius:0;
-                    padding:10px 10px;
-                    box-sizing:border-box;
-                ">
-                    <div style="font-size:12px;color:#333;">E-301</div>
-                    <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">Рекомендуемые параметры</div>
-                    <div style="font-size:11px;color:#555;">Температура, ℃</div>
-                    <div style="font-size:16px;font-weight:800;color:#1c6d34;margin-bottom:6px;">{temp_pred:.2f}</div>
-                    <div style="font-size:11px;color:#555;">Давление, МПа</div>
-                    <div style="font-size:16px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
-                </div>
-
-                <div style="
-                    position:absolute;
-                    right:2.5%;
-                    top:8%;
-                    width:170px;
-                    min-height:86px;
-                    background:#fffffff2;
-                    border:3px solid #202020;
-                    border-radius:0;
-                    padding:10px 10px;
+                    padding:12px 12px;
                     box-sizing:border-box;
                 ">
                     <div style="font-size:13px;font-weight:700;color:#222;margin-bottom:8px;">K-301</div>
                     <div style="font-size:11px;color:#555;">Температура верха</div>
-                    <div style="font-size:15px;font-weight:800;color:#234c28;margin-bottom:4px;">{top_val:.2f} ℃</div>
+                    <div style="font-size:16px;font-weight:800;color:#234c28;margin-bottom:4px;">{top_val:.2f} ℃</div>
                     <div style="font-size:11px;color:#555;">Гор. зона</div>
-                    <div style="font-size:15px;font-weight:800;color:#234c28;margin-bottom:4px;">{hot_val:.2f} ℃</div>
+                    <div style="font-size:16px;font-weight:800;color:#234c28;margin-bottom:4px;">{hot_val:.2f} ℃</div>
                     <div style="font-size:11px;color:#555;">Хол. зона</div>
-                    <div style="font-size:15px;font-weight:800;color:#234c28;">{cold_val:.2f} ℃</div>
+                    <div style="font-size:16px;font-weight:800;color:#234c28;">{cold_val:.2f} ℃</div>
                 </div>
 
+                <!-- Масса КГД (справа посередине) - убрана надпись "Между K-301 и ВХ-302" -->
                 <div style="
                     position:absolute;
-                    right:2.5%;
-                    top:40%;
-                    width:170px;
-                    min-height:86px;
+                    right:2%;
+                    top:32%;
+                    width:200px;
+                    min-height:90px;
                     background:#fffffff2;
                     border:3px solid #202020;
                     border-radius:0;
-                    padding:10px 10px;
+                    padding:12px 12px;
                     box-sizing:border-box;
                 ">
-                    <div style="font-size:12px;color:#333;">Между K-301 и ВХ-302</div>
-                    <div style="font-size:12px;color:#555;margin-top:8px;">Масса КГД</div>
-                    <div style="font-size:20px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
+                    <div style="font-size:12px;color:#555;margin-bottom:4px;">Масса КГД</div>
+                    <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
                 </div>
 
+                <!-- Вывод балансового избытка (справа снизу) - добавлено "Масса выхода" и "тонн/час" -->
                 <div style="
                     position:absolute;
-                    right:2.5%;
-                    top:66%;
-                    width:170px;
-                    min-height:86px;
+                    right:2%;
+                    top:52%;
+                    width:200px;
+                    min-height:100px;
                     background:#fffffff2;
                     border:3px solid #202020;
                     border-radius:0;
-                    padding:10px 10px;
+                    padding:12px 12px;
                     box-sizing:border-box;
                 ">
-                    <div style="font-size:12px;color:#555;margin-top:8px;">Вывод балансового избытка</div>
-                    <div style="font-size:20px;font-weight:800;color:#245a2d;">{excess_val:.2f}</div>
+                    <div style="font-size:12px;color:#333;margin-bottom:4px;">Масса выхода</div>
+                    <div style="font-size:12px;color:#555;">Вывод балансового избытка</div>
+                    <div style="font-size:22px;font-weight:800;color:#245a2d;">{excess_val:.2f}</div>
+                    <div style="font-size:10px;color:#666;margin-top:4px;">система исчисления: тонн/час</div>
                 </div>
 
+                <!-- Расчет (снизу по центру) -->
                 <div style="
                     position:absolute;
                     left:50%;
                     bottom:2%;
                     transform:translateX(-50%);
-                    width:240px;
-                    min-height:42px;
+                    width:280px;
+                    min-height:50px;
                     background:#fffffff2;
                     border:3px solid #202020;
                     border-radius:0;
-                    padding:8px 12px;
+                    padding:10px 14px;
                     box-sizing:border-box;
                     text-align:left;
                 ">
@@ -342,7 +369,7 @@ def render_scheme_with_overlay(
         </div>
     </div>
     """
-    components.html(html, height=860, scrolling=False)
+    components.html(html, height=950, scrolling=False)
 
 
 def main():
@@ -380,6 +407,10 @@ def main():
     for feat, val in artifacts["press_medians"].items():
         medians.setdefault(feat, val)
 
+    # ДОБАВЛЕНА ПРОВЕРКА для массы КГД - берем медиану только из значений 100-250 тонн/час
+    if KGD_MASS in medians:
+        medians[KGD_MASS] = get_kgd_mass_median(ref_df, KGD_MASS, medians[KGD_MASS])
+
     important_order = [
         f
         for f in [methane_feat, ethane_feat, TOP_TEMP, HOT_ZONE, COLD_ZONE, EXCESS, KGD_MASS]
@@ -399,13 +430,27 @@ def main():
     selected_features = ordered[:8] if not show_more else ordered[:16]
     user_values = {}
 
-    selected_features = ordered[:8] if not show_more else ordered[:16]
-    user_values = {}
-
     st.markdown("## Входные данные")
     st.caption("Во входах оставлены отдельные параметры сырья: содержание метана и содержание этана.")
 
     input_cols = st.columns(4)
+    for i, feat in enumerate(selected_features):
+        fallback = medians.get(feat, 0.0)
+        lo, hi, med = get_limits(ref_df, feat, fallback)
+        value = med if use_demo else fallback
+        step = max((hi - lo) / 100, 0.0001)
+        fmt = "%.4f" if abs(hi) < 10 else "%.2f"
+
+        with input_cols[i % 4]:
+            user_values[feat] = st.number_input(
+                feat,
+                min_value=float(lo),
+                max_value=float(hi),
+                value=float(value),
+                step=float(step),
+                format=fmt,
+                key=f"input_{i}",
+            )
 
     temp_pred, press_pred = predict_values(artifacts, user_values)
 
