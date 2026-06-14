@@ -295,6 +295,7 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">K-301</div>
                         <div style="font-size:11px;color:#555;">Температура верха</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{top_val:.2f} ℃</div>
+                        <div style="font-size:11px;color:#555;">Температура низа</div>
                         <div style="font-size:11px;color:#555;">Горячая зона</div>
                         <div style="font-size:18px;font-weight:800;color:#234c28;margin-bottom:6px;">{hot_val:.2f} ℃</div>
                         <div style="font-size:11px;color:#555;">Холодная зона</div>
@@ -309,6 +310,7 @@ def render_scheme_with_overlay(
                     ">
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:6px;">Масса КГД</div>
                         <div style="font-size:22px;font-weight:800;color:#245a2d;">{kgd_val:.2f}</div>
+                        <div style="font-size:11px;color:#555;">тонн/час</div>
                     </div>
                 </div>
             </div>
