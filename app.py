@@ -180,7 +180,6 @@ def display_value(user_values, medians, feat):
 def render_scheme_with_overlay(
     scheme_path,
     temp_pred,
-    press_pred,
     top_val,
     hot_val,
     cold_val,
@@ -243,8 +242,6 @@ def render_scheme_with_overlay(
                         <div style="font-size:14px;font-weight:700;color:#222;margin-bottom:10px;">Рекомендуемые параметры</div>
                         <div style="font-size:11px;color:#555;">Температура, ℃</div>
                         <div style="font-size:20px;font-weight:800;color:#1c6d34;margin-bottom:8px;">{temp_pred:.2f}</div>
-                        <div style="font-size:11px;color:#555;">Давление, МПа</div>
-                        <div style="font-size:20px;font-weight:800;color:#1f5fbf;">{press_pred:.3f}</div>
                     </div>
 
                     <div style="
@@ -449,8 +446,6 @@ def main():
     m1, m2 = st.columns(2)
     with m1:
         metric_box("Температура, ℃", f"{temp_pred:.2f}", "℃", "#1c6d34", "#f8fcf8")
-    with m2:
-        metric_box("Давление, МПа", f"{press_pred:.3f}", "МПа", "#1f5fbf", "#f7faff")
 
     with st.expander("Показать входные значения для модели"):
         preview = pd.DataFrame(
