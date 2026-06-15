@@ -434,7 +434,6 @@ def main():
     render_scheme_with_overlay(
         scheme_path=scheme_path,
         temp_pred=temp_pred,
-        press_pred=press_pred,
         top_val=display_value(user_values, medians, TOP_TEMP),
         hot_val=display_value(user_values, medians, HOT_ZONE),
         cold_val=display_value(user_values, medians, COLD_ZONE),
@@ -446,8 +445,6 @@ def main():
     m1, m2 = st.columns(2)
     with m1:
         metric_box("Температура, ℃", f"{temp_pred:.2f}", "℃", "#1c6d34", "#f8fcf8")
-    with m2:
-        metric_box("Давление, МПа", f"{press_pred:.3f}", "МПа", "#1f5fbf", "#f7faff")
 
     with st.expander("Показать входные значения для модели"):
         preview = pd.DataFrame(
